@@ -1,9 +1,9 @@
 package task_3_3;
 
-import task_3_3.Interfaces.IAssemblyLine;
-import task_3_3.Interfaces.ILineStep;
-import task_3_3.Interfaces.IProduct;
-import task_3_3.Interfaces.IProductPart;
+import task_3_3.interfaces.IAssemblyLine;
+import task_3_3.interfaces.ILineStep;
+import task_3_3.interfaces.IProduct;
+import task_3_3.interfaces.IProductPart;
 
 public class CarAssemblyLine implements IAssemblyLine {
 

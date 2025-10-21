@@ -1,10 +1,10 @@
 package task_3_3;
 
-import task_3_3.CarDetails.CarBody;
-import task_3_3.CarDetails.Chassis;
-import task_3_3.CarDetails.Engine;
-import task_3_3.Interfaces.IProduct;
-import task_3_3.Interfaces.IProductPart;
+import task_3_3.carDetails.CarBody;
+import task_3_3.carDetails.Chassis;
+import task_3_3.carDetails.Engine;
+import task_3_3.interfaces.IProduct;
+import task_3_3.interfaces.IProductPart;
 
 public class Car implements IProduct {
 

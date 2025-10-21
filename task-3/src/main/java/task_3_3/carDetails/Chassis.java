@@ -1,6 +1,6 @@
-package task_3_3.CarDetails;
+package task_3_3.carDetails;
 
-import task_3_3.Interfaces.IProductPart;
+import task_3_3.interfaces.IProductPart;
 
 public class Chassis implements IProductPart {
 

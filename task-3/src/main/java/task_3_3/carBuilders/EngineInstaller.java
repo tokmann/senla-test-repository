@@ -1,8 +1,8 @@
-package task_3_3.CarBuilders;
+package task_3_3.carBuilders;
 
-import task_3_3.CarDetails.Engine;
-import task_3_3.Interfaces.ILineStep;
-import task_3_3.Interfaces.IProductPart;
+import task_3_3.carDetails.Engine;
+import task_3_3.interfaces.ILineStep;
+import task_3_3.interfaces.IProductPart;
 
 public class EngineInstaller implements ILineStep {
 

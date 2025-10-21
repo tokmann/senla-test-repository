@@ -1,3 +1,3 @@
-package task_3_3.Interfaces;
+package task_3_3.interfaces;
 
 public interface IProductPart {}
