@@ -33,7 +33,7 @@ public class Car implements IProduct {
     public void showCar() {
         System.out.println("\n=== АВТОМОБИЛЬ ===");
         System.out.println("Кузов: " + body.getType());
-        System.out.println("Шасси: " + chassis.getChassisType() + " колеса");
+        System.out.println("Шасси: " + chassis.getChassisType());
         System.out.println("Двигатель: " + engine.getModel());
         System.out.println("========================");
     }
