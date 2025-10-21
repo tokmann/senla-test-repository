@@ -9,9 +9,9 @@ import task_3_3.Interfaces.IProduct;
 
 public class Main {
     public static void main(String[] args) {
-        ILineStep bodySpecialist = new CarBodyInstaller();
-        ILineStep chassisSpecialist = new ChassisInstaller();
-        ILineStep engineSpecialist = new EngineInstaller();
+        ILineStep bodySpecialist = new CarBodyInstaller("Кузов седан");
+        ILineStep chassisSpecialist = new ChassisInstaller("Рамное шасси");
+        ILineStep engineSpecialist = new EngineInstaller("Двигатель V8");
         IAssemblyLine assemblyLine = new CarAssemblyLine(bodySpecialist, chassisSpecialist, engineSpecialist);
 
         IProduct car = new Car();

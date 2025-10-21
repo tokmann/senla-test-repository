@@ -6,9 +6,15 @@ import task_3_3.Interfaces.IProductPart;
 
 public class EngineInstaller implements ILineStep {
 
+    private final String engineModel;
+
+    public EngineInstaller(String engineModel) {
+        this.engineModel = engineModel;
+    }
+
     @Override
     public IProductPart buildProductPart() {
         System.out.println(">>> Происходит создание и установка двигателя...");
-        return new Engine("Двигатель V8");
+        return new Engine(engineModel);
     }
 }

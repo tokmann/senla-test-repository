@@ -6,9 +6,15 @@ import task_3_3.Interfaces.IProductPart;
 
 public class ChassisInstaller implements ILineStep {
 
+    private final String chassisType;
+
+    public ChassisInstaller(String chassisType) {
+        this.chassisType = chassisType;
+    }
+
     @Override
     public IProductPart buildProductPart() {
         System.out.println(">>> Происходит создание и установка шасси автомобиля...");
-        return new Chassis("Рамное шасси");
+        return new Chassis(chassisType);
     }
 }
