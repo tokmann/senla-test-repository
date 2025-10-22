@@ -20,19 +20,27 @@ public class CarAssemblyLine implements IAssemblyLine {
     @Override
     public IProduct assembleProduct(IProduct product) {
         System.out.println("=== НАЧАЛО СБОРКИ АВТОМОБИЛЯ ===");
+        installBody(product);
+        installChassis(product);
+        installEngine(product);
+        return product;
+    }
 
+    private void installBody(IProduct product) {
         System.out.println("1: Установка кузова");
         IProductPart body = firstStep.buildProductPart();
         product.installFirstPart(body);
+    }
 
+    private void installChassis(IProduct product) {
         System.out.println("\n2: Установка шасси");
         IProductPart chassis = secondStep.buildProductPart();
         product.installSecondPart(chassis);
+    }
 
+    private void installEngine(IProduct product) {
         System.out.println("\n3: Установка двигателя");
         IProductPart engine = thirdStep.buildProductPart();
         product.installThirdPart(engine);
-
-        return product;
     }
 }
