@@ -1,0 +1,8 @@
+task_4\HotelAdmin.class
+task_4\model\Guest.class
+task_4\management\GuestManager.class
+task_4\model\Service.class
+task_4\management\RoomManager.class
+task_4\model\Room.class
+task_4\management\ServiceManager.class
+task_4\management\HotelManager.class
