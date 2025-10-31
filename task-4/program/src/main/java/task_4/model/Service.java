@@ -9,10 +9,11 @@ public class Service {
     private double price;
     private LocalDate date;
 
-    public Service(String name, String description, double price) {
+    public Service(String name, String description, double price, LocalDate date) {
         this.name = name;
         this.description = description;
         this.price = price;
+        this.date = date;
     }
 
     public String getName() {

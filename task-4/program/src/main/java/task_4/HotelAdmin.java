@@ -37,10 +37,12 @@ public class HotelAdmin {
         hotelManager.getRoomManager().addRoom(201, 2, 5000.0, 5);
         hotelManager.getRoomManager().addRoom(202, 4, 4500.0, 4);
 
-        hotelManager.getServiceManager().addService("Завтрак", "Континентальный завтрак", 500.0);
-        hotelManager.getServiceManager().addService("SPA", "Спа процедуры", 2000.0);
-        hotelManager.getServiceManager().addService("Трансфер", "Трансфер из аэропорта", 1500.0);
-        hotelManager.getServiceManager().addService("Прачечная", "Стирка и глажка", 300.0);
+        hotelManager.getServiceManager().addService("Завтрак", "Континентальный завтрак", 500.0, LocalDate.now());
+        hotelManager.getServiceManager().addService("SPA", "Спа процедуры", 2000.0, LocalDate.now().plusDays(2));
+
+        hotelManager.getServiceManager().addService("Трансфер", "Трансфер из аэропорта", 1500.0, LocalDate.now().plusDays(5));
+
+        hotelManager.getServiceManager().addService("Прачечная", "Стирка и глажка", 300.0, LocalDate.now().plusDays(8));
 
         System.out.println("Тестовые данные добавлены\n");
     }
@@ -75,8 +77,8 @@ public class HotelAdmin {
     private static void testGuestManagement(HotelManager hotelManager) {
         System.out.println("3. ТЕСТИРОВАНИЕ УПРАВЛЕНИЯ ГОСТЯМИ");
 
-        Service breakfast = new Service("Завтрак", "Континентальный завтрак", 500.0);
-        Service spa = new Service("SPA", "Спа процедуры", 2000.0);
+        Service breakfast = new Service("Завтрак", "Континентальный завтрак", 500.0, LocalDate.now().plusDays(5));
+        Service spa = new Service("SPA", "Спа процедуры", 2000.0, LocalDate.now().plusDays(8));
 
         List<Service> ivanServices = new ArrayList<>();
         ivanServices.add(breakfast);
@@ -138,8 +140,19 @@ public class HotelAdmin {
         System.out.println("9. Услуги гостя (сортировка по цене):");
         List<Guest> guests = hotelManager.getGuests();
         if (!guests.isEmpty()) {
-            Guest testGuest = guests.get(0);
+            Guest testGuest = guests.get(1);
             List<Service> guestServices = hotelManager.getSortedGuestServices(testGuest, "Цена");
+            if (guestServices.isEmpty()) {
+                System.out.println("У гостя " + testGuest.getFullName() + " нет услуг");
+            } else {
+                guestServices.forEach(System.out::println);
+            }
+        }
+
+        System.out.println("9. Услуги гостя (сортировка по дате):");
+        if (!guests.isEmpty()) {
+            Guest testGuest = guests.get(1);
+            List<Service> guestServices = hotelManager.getSortedGuestServices(testGuest, "Дата");
             if (guestServices.isEmpty()) {
                 System.out.println("У гостя " + testGuest.getFullName() + " нет услуг");
             } else {

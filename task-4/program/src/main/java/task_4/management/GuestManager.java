@@ -32,7 +32,7 @@ public class GuestManager {
 
     public void addGuest(Guest guest) {
         guests.add(guest);
-        System.out.println("Гость - " + guest + " добавлен");
+        System.out.println(guest + " добавлен");
     }
 
     public int allGuestsCount() {

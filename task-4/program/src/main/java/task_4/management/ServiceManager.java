@@ -2,6 +2,7 @@ package task_4.management;
 
 import task_4.model.Service;
 
+import java.time.LocalDate;
 import java.util.*;
 
 public class ServiceManager {
@@ -17,12 +18,12 @@ public class ServiceManager {
         this.services = new ArrayList<>();
     }
 
-    public void addService(String name, String description, double price) {
+    public void addService(String name, String description, double price, LocalDate date) {
         if (getServiceByName(name).isPresent()) {
             System.out.println("Услуга с таким названием уже существует.");
             return;
         }
-        services.add(new Service(name, description, price));
+        services.add(new Service(name, description, price, date));
         System.out.println("Услуга '" + name + "' добавлена успешно.");
     }
 
