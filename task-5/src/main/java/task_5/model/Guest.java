@@ -2,6 +2,10 @@ package task_5.model;
 
 import java.util.List;
 
+/**
+ * Модель гостя.
+ * Представляет данные о постояльце и его связях (номер, услуги).
+ */
 public class Guest {
 
     private int age;

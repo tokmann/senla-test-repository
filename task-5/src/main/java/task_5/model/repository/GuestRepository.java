@@ -5,6 +5,10 @@ import task_5.model.Guest;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Репозиторий гостей.
+ * Хранит данные о гостях в памяти.
+ */
 public class GuestRepository {
 
     private final List<Guest> guests = new ArrayList<>();

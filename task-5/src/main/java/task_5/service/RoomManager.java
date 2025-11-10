@@ -10,6 +10,12 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Сервисный слой для управления номерами отеля.
+ * Отвечает за бронирование, выселение, установку цен,
+ * техническое обслуживание, историю и фильтрацию номеров.
+ * Инкапсулирует бизнес-логику, связанную с сущностью {@link Room}.
+ */
 public class RoomManager {
 
     private final RoomRepository repository;
@@ -20,6 +26,9 @@ public class RoomManager {
         this.guestManager = guestManager;
     }
 
+    /**
+     * Добавляет номер в систему, если номер с таким номером ещё не существует.
+     */
     public boolean addRoom(Room room) {
         Optional<Room> existing = repository.findByNumber(room.getNumber());
         if (existing.isPresent()) return false;
@@ -27,6 +36,10 @@ public class RoomManager {
         return true;
     }
 
+    /**
+     * Заселяет гостей в номер на указанный период.
+     * Обновляет связи между гостями и номером.
+     */
     public boolean checkIn(int roomNumber, List<Guest> guests, LocalDate checkInDate, LocalDate checkOutDate) {
         Optional<Room> optionalRoom = repository.findByNumber(roomNumber);
         if (optionalRoom.isPresent()) {
@@ -39,6 +52,9 @@ public class RoomManager {
         return false;
     }
 
+    /**
+     * Выселяет всех гостей из указанного номера и удаляет их из репозитория гостей.
+     */
     public boolean checkOut(int roomNumber) {
         Optional<Room> optionalRoom = repository.findByNumber(roomNumber);
         if (optionalRoom.isPresent()) {
@@ -51,10 +67,16 @@ public class RoomManager {
         return false;
     }
 
+    /**
+     * Помечает номер как находящийся на обслуживании.
+     */
     public void setRoomMaintenance(int roomNumber, boolean maintenance) {
         repository.findByNumber(roomNumber).ifPresent(room -> room.setMaintenance(maintenance));
     }
 
+    /**
+     * Изменяет цену номера.
+     */
     public void changeRoomPrice(int roomNumber, double newPrice) {
         repository.findByNumber(roomNumber).ifPresent(room -> room.setPrice(newPrice));
     }
@@ -69,6 +91,9 @@ public class RoomManager {
         return repository.findByNumber(roomNumber);
     }
 
+    /**
+     * Возвращает список всех свободных и не находящихся на обслуживании номеров.
+     */
     public List<Room> getFreeRooms(RoomSortOption option) {
         return repository.findAll().stream()
                 .filter(r -> !r.isOccupied() && !r.isUnderMaintenance())
@@ -76,12 +101,18 @@ public class RoomManager {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Подсчитывает количество свободных номеров.
+     */
     public int countFreeRooms() {
         return (int) repository.findAll().stream()
                 .filter(r -> !r.isOccupied())
                 .count();
     }
 
+    /**
+     * Возвращает список номеров, которые освободятся к указанной дате.
+     */
     public List<Room> findRoomsThatWillBeFree(LocalDate date) {
         return repository.findAll().stream()
                 .filter(r -> !r.isOccupied() ||
@@ -90,6 +121,9 @@ public class RoomManager {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Вычисляет полную стоимость проживания в номере по количеству дней.
+     */
     public double fullRoomPrice(Room room) {
         if (room.getCheckInDate() == null || room.getCheckOutDate() == null) return 0.0;
         long days = ChronoUnit.DAYS.between(room.getCheckInDate(), room.getCheckOutDate());
@@ -97,6 +131,9 @@ public class RoomManager {
         return days * room.getPrice();
     }
 
+    /**
+     * Возвращает историю последних заселений в номер (в виде строковых записей).
+     */
     public List<String> getRoomHistory(int roomNumber, int historyLength) {
         return repository.findByNumber(roomNumber)
                 .map(room -> room.getLastStays(historyLength))

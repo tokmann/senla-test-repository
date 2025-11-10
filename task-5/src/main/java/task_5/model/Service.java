@@ -2,6 +2,9 @@ package task_5.model;
 
 import java.time.LocalDate;
 
+/**
+ * Модель дополнительной услуги.
+ */
 public class Service {
 
     private final String name;

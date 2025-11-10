@@ -4,6 +4,10 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Модель номера в отеле.
+ * Хранит данные о состоянии, проживающих и истории заселений.
+ */
 public class Room {
 
     private final int number;
@@ -27,6 +31,10 @@ public class Room {
         this.guests = new ArrayList<>();
     }
 
+    /**
+     * Заселение гостей.
+     * Проверяет вместимость и статус обслуживания.
+     */
     public boolean checkIn(List<Guest> newGuests, LocalDate checkInDate, LocalDate checkOutDate) {
         if (underMaintenance) return false;
         int availableSpots = capacity - guests.size();
@@ -37,6 +45,7 @@ public class Room {
         this.checkInDate = checkInDate;
         this.checkOutDate = checkOutDate;
 
+        // Логирование истории заселения
         String guestNames = newGuests.stream()
                 .map(g -> g.getFirstName() + " " + g.getSecondName())
                 .toList()
@@ -46,11 +55,13 @@ public class Room {
         return true;
     }
 
+    /** Получение истории жителей комнаты */
     public List<String> getLastStays(int count) {
         int size = stayHistory.size();
         return stayHistory.subList(Math.max(0, size - count), size);
     }
 
+    /** Выселение всех гостей */
     public void checkOut() {
         this.isOccupied = false;
         this.guests = new ArrayList<>();

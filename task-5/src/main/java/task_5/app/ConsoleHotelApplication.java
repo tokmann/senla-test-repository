@@ -24,15 +24,22 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
 
+/**
+ * Главный класс консольного приложения отеля.
+ * Класс служит точкой входа и управляет основным циклом пользовательского интерфейса.
+ */
 public class ConsoleHotelApplication {
     public static void main(String[] args) {
+        // Фабрика для создания UI (поддерживает возможность замены интерфейса)
         UIFactory factory = UIFactoryProvider.getInstance();
         ConsoleView consoleView = factory.createConsoleView();
 
+        // Инициализация менеджеров и репозиториев (в будущем можно заменить на БД)
         GuestManager guestManager = new GuestManager(new GuestRepository());
         RoomManager roomManager = new RoomManager(new RoomRepository(), guestManager);
         ServiceManager serviceManager = new ServiceManager(new ServiceRepository());
 
+        // Контроллеры связывают View и бизнес-логику
         GuestController guestController = new GuestController(guestManager, roomManager, serviceManager);
         RoomController roomController = new RoomController(roomManager, consoleView);
         ServiceController serviceController = new ServiceController(serviceManager);
@@ -65,7 +72,7 @@ public class ConsoleHotelApplication {
             String input = scanner.nextLine().trim();
             try {
                 switch (input) {
-                    case "1" -> {
+                    case "1" -> { /* Показать все номера */
                         consoleView.print("Критерий сортировки (Цена, Вместимость, Звезды): ");
                         String sortInput = scanner.nextLine();
                         RoomSortOption option = RoomSortOption.fromDescription(sortInput);
@@ -73,7 +80,7 @@ public class ConsoleHotelApplication {
                         rooms.forEach(consoleView::println);
                     }
 
-                    case "2" -> {
+                    case "2" -> { /* Показать свободные номера */
                         consoleView.print("Критерий сортировки (Цена, Вместимость, Звезды): ");
                         String sortInput = scanner.nextLine();
                         RoomSortOption option = RoomSortOption.fromDescription(sortInput);
@@ -81,7 +88,7 @@ public class ConsoleHotelApplication {
                         rooms.forEach(consoleView::println);
                     }
 
-                    case "3" -> {
+                    case "3" -> { /* Регистрация гостя */
                         consoleView.print("Имя: "); String firstName = scanner.nextLine();
                         consoleView.print("Фамилия: "); String lastName = scanner.nextLine();
                         consoleView.print("Возраст: "); int age = Integer.parseInt(scanner.nextLine());
@@ -96,7 +103,7 @@ public class ConsoleHotelApplication {
                         }
                     }
 
-                    case "4" -> {
+                    case "4" -> { /* Список всех гостей */
                         consoleView.print("Критерий сортировки (Алфавит, Дата освобождения номера): ");
                         String sortInput = scanner.nextLine();
                         GuestSortOption option = GuestSortOption.fromDescription(sortInput);
@@ -104,7 +111,7 @@ public class ConsoleHotelApplication {
                         guests.forEach(consoleView::println);
                     }
 
-                    case "5" -> {
+                    case "5" -> { /* Добавление услуги */
                         consoleView.print("Название услуги: "); String name = scanner.nextLine();
                         consoleView.print("Описание: "); String desc = scanner.nextLine();
                         consoleView.print("Цена: "); double price = Double.parseDouble(scanner.nextLine());
@@ -112,7 +119,7 @@ public class ConsoleHotelApplication {
                         consoleView.println("Услуга добавлена: " + service);
                     }
 
-                    case "6" -> {
+                    case "6" -> { /* Показать все услуги */
                         consoleView.print("Критерий сортировки (Цена, Название): ");
                         String sortInput = scanner.nextLine();
                         ServiceSortOption option = ServiceSortOption.fromDescription(sortInput);
@@ -124,7 +131,7 @@ public class ConsoleHotelApplication {
 
                     case "8" -> consoleView.println("Количество гостей: " + guestController.countGuests());
 
-                    case "9" -> {
+                    case "9" -> { /* Свободные номера к определенной дате */
                         consoleView.print("Введите дату (yyyy-mm-dd): ");
                         LocalDate date = LocalDate.parse(scanner.nextLine());
                         List<Room> rooms = roomController.findRoomsThatWillBeFree(date);
@@ -132,7 +139,7 @@ public class ConsoleHotelApplication {
                         rooms.forEach(consoleView::println);
                     }
 
-                    case "10" -> {
+                    case "10" -> { /* Расчет стоимости */
                         consoleView.print("Введите номер комнаты: ");
                         int roomNumber = Integer.parseInt(scanner.nextLine());
                         Optional<Double> price = roomController.getFullRoomPrice(roomNumber);
@@ -142,7 +149,7 @@ public class ConsoleHotelApplication {
                         );
                     }
 
-                    case "11" -> {
+                    case "11" -> { /* История гостей */
                         consoleView.print("Введите номер комнаты: ");
                         int roomNumber = Integer.parseInt(scanner.nextLine());
                         consoleView.print("Введите количество последних гостей для истории: ");
@@ -151,7 +158,7 @@ public class ConsoleHotelApplication {
                         history.forEach(consoleView::println);
                     }
 
-                    case "12" -> {
+                    case "12" -> { /* Просмотр услуг гостя */
                         consoleView.print("Введите имя и фамилию гостя: ");
                         String guestName = scanner.nextLine();
                         Guest guest = guestController.findGuestByFullName(guestName);
@@ -166,14 +173,14 @@ public class ConsoleHotelApplication {
                         }
                     }
 
-                    case "13" -> {
+                    case "13" -> { /* Подробности по номеру */
                         consoleView.print("Введите номер комнаты: ");
                         int roomNumber = Integer.parseInt(scanner.nextLine());
                         Optional<Room> room = roomController.getFullRoomInfo(roomNumber);
                         room.ifPresentOrElse(consoleView::println, () -> consoleView.println("Номер не найден"));
                     }
 
-                    case "14" -> {
+                    case "14" -> { /* Выселение гостей */
                         consoleView.print("Введите номер комнаты для выселения: ");
                         int roomNumber = Integer.parseInt(scanner.nextLine());
                         boolean success = roomManager.checkOut(roomNumber);
@@ -184,7 +191,7 @@ public class ConsoleHotelApplication {
                         }
                     }
 
-                    case "15" -> {
+                    case "15" -> { /* Добавление комнаты */
                         consoleView.print("Номер комнаты: ");
                         int number = Integer.parseInt(scanner.nextLine());
                         consoleView.print("Вместимость: ");
@@ -199,7 +206,7 @@ public class ConsoleHotelApplication {
                         else consoleView.println("Номер с таким номером уже существует");
                     }
 
-                    case "16" -> {
+                    case "16" -> { /* Добавление услуги гостю */
                         consoleView.print("Введите имя и фамилию гостя: ");
                         String guestName = scanner.nextLine();
                         Guest guest = guestManager.findGuestByFullName(guestName);
@@ -231,6 +238,7 @@ public class ConsoleHotelApplication {
                     default -> consoleView.printInvalidOption();
                 }
             } catch (Exception e) {
+                // Центральная обработка ошибок, чтобы приложение не падало
                 consoleView.println("Ошибка: " + e.getMessage());
         }
     }

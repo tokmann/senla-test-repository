@@ -6,6 +6,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Репозиторий комнат.
+ * Отвечает за хранение и поиск комнат по номеру.
+ */
 public class RoomRepository {
 
     private final List<Room> rooms = new ArrayList<>();
@@ -22,6 +26,7 @@ public class RoomRepository {
         return new ArrayList<>(rooms);
     }
 
+    /** Поиск комнаты по её номеру */
     public Optional<Room> findByNumber(int number) {
         return rooms.stream().filter(r -> r.getNumber() == number).findFirst();
     }

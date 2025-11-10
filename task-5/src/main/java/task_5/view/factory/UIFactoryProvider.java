@@ -1,5 +1,10 @@
 package task_5.view.factory;
 
+/**
+ * Провайдер для получения единственного экземпляра фабрики UI.
+ * Реализует паттерн Singleton.
+ * Позволяет централизованно управлять типом интерфейса без изменения бизнес-логики.
+ */
 public class UIFactoryProvider  {
 
     private static UIFactory instance;

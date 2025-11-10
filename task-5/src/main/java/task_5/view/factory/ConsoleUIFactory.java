@@ -2,6 +2,10 @@ package task_5.view.factory;
 
 import task_5.view.ConsoleView;
 
+/**
+ * Реализация фабрики UI для консольного интерфейса.
+ * Отвечает за создание экземпляра {@link ConsoleView}.
+ */
 public class ConsoleUIFactory implements UIFactory {
 
     @Override
