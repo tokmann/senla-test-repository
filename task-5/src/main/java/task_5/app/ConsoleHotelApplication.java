@@ -6,9 +6,9 @@ import task_5.controller.ServiceController;
 import task_5.model.Guest;
 import task_5.model.Room;
 import task_5.model.Service;
-import task_5.model.repository.GuestRepository;
-import task_5.model.repository.RoomRepository;
-import task_5.model.repository.ServiceRepository;
+import task_5.repository.impl.InMemoryGuestRepository;
+import task_5.repository.impl.InMemoryRoomRepository;
+import task_5.repository.impl.InMemoryServiceRepository;
 import task_5.service.GuestManager;
 import task_5.service.RoomManager;
 import task_5.service.ServiceManager;
@@ -36,9 +36,9 @@ public class ConsoleHotelApplication {
         ConsoleView consoleView = factory.createConsoleView();
 
         // Инициализация менеджеров и репозиториев (в будущем можно заменить на БД)
-        GuestManager guestManager = new GuestManager(new GuestRepository());
-        RoomManager roomManager = new RoomManager(new RoomRepository(), guestManager);
-        ServiceManager serviceManager = new ServiceManager(new ServiceRepository());
+        GuestManager guestManager = new GuestManager(new InMemoryGuestRepository());
+        RoomManager roomManager = new RoomManager(new InMemoryRoomRepository(), guestManager);
+        ServiceManager serviceManager = new ServiceManager(new InMemoryServiceRepository());
 
         // Контроллеры связывают View и бизнес-логику
         GuestController guestController = new GuestController(guestManager, roomManager, serviceManager);

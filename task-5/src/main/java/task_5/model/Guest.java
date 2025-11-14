@@ -8,18 +8,24 @@ import java.util.List;
  */
 public class Guest {
 
+    private long id;
     private int age;
     private final String firstName;
     private final String secondName;
     private Room room;
     private List<Service> services;
 
-    public Guest(int age, String firstName, String secondName, Room room, List<Service> services) {
+    public Guest(long id, int age, String firstName, String secondName, Room room, List<Service> services) {
+        this.id = id;
         this.age = age;
         this.firstName = firstName;
         this.secondName = secondName;
         this.room = room;
         this.services = services;
+    }
+
+    public long getId() {
+        return id;
     }
 
     public String getFirstName() {

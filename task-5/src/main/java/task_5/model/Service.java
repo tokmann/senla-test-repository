@@ -7,16 +7,22 @@ import java.time.LocalDate;
  */
 public class Service {
 
+    private long id;
     private final String name;
     private String description;
     private double price;
     private LocalDate date;
 
-    public Service(String name, String description, double price, LocalDate date) {
+    public Service(long id, String name, String description, double price, LocalDate date) {
+        this.id = id;
         this.name = name;
         this.description = description;
         this.price = price;
         this.date = date;
+    }
+
+    public long getId() {
+        return id;
     }
 
     public String getName() {

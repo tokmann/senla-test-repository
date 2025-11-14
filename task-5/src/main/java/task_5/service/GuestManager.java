@@ -2,7 +2,7 @@ package task_5.service;
 
 import task_5.model.Guest;
 import task_5.model.Service;
-import task_5.model.repository.GuestRepository;
+import task_5.repository.impl.InMemoryGuestRepository;
 import task_5.view.enums.GuestSortOption;
 import task_5.view.enums.ServiceSortOption;
 
@@ -17,9 +17,9 @@ import java.util.stream.Collectors;
  */
 public class GuestManager {
 
-    private final GuestRepository repository;
+    private final InMemoryGuestRepository repository;
 
-    public GuestManager(GuestRepository repository) {
+    public GuestManager(InMemoryGuestRepository repository) {
         this.repository = repository;
     }
 

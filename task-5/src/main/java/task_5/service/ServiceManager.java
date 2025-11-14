@@ -1,7 +1,7 @@
 package task_5.service;
 
 import task_5.model.Service;
-import task_5.model.repository.ServiceRepository;
+import task_5.repository.impl.InMemoryServiceRepository;
 import task_5.view.enums.ServiceSortOption;
 
 import java.time.LocalDate;
@@ -11,13 +11,13 @@ import java.util.stream.Collectors;
 /**
  * Менеджер для управления услугами.
  * Отвечает за добавление, изменение и сортировку услуг.
- * Представляет бизнес-логику над репозиторием {@link ServiceRepository}.
+ * Представляет бизнес-логику над репозиторием {@link InMemoryServiceRepository}.
  */
 public class ServiceManager {
 
-    private final ServiceRepository repository;
+    private final InMemoryServiceRepository repository;
 
-    public ServiceManager(ServiceRepository repository) {
+    public ServiceManager(InMemoryServiceRepository repository) {
         this.repository = repository;
     }
 

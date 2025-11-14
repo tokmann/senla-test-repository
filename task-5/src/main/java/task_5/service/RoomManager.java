@@ -2,7 +2,7 @@ package task_5.service;
 
 import task_5.model.Guest;
 import task_5.model.Room;
-import task_5.model.repository.RoomRepository;
+import task_5.repository.impl.InMemoryRoomRepository;
 import task_5.view.enums.RoomSortOption;
 
 import java.time.LocalDate;
@@ -18,10 +18,10 @@ import java.util.stream.Collectors;
  */
 public class RoomManager {
 
-    private final RoomRepository repository;
+    private final InMemoryRoomRepository repository;
     private final GuestManager guestManager;
 
-    public RoomManager(RoomRepository repository, GuestManager guestManager) {
+    public RoomManager(InMemoryRoomRepository repository, GuestManager guestManager) {
         this.repository = repository;
         this.guestManager = guestManager;
     }

@@ -10,6 +10,7 @@ import java.util.List;
  */
 public class Room {
 
+    private long id;
     private final int number;
     private final int capacity;
     private double price; // Цена за сутки
@@ -21,7 +22,8 @@ public class Room {
     private LocalDate checkInDate;
     private LocalDate checkOutDate;
 
-    public Room(int number, int capacity, double price, int stars) {
+    public Room(long id, int number, int capacity, double price, int stars) {
+        this.id = id;
         this.number = number;
         this.capacity = capacity;
         this.price = price;
@@ -29,6 +31,58 @@ public class Room {
         this.isOccupied = false;
         this.underMaintenance = false;
         this.guests = new ArrayList<>();
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    public boolean isUnderMaintenance() {
+        return underMaintenance;
+    }
+
+    public int getNumber() {
+        return number;
+    }
+
+    public int getCapacity() {
+        return capacity;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public void setPrice(double price) {
+        this.price = price;
+    }
+
+    public int getStars() {
+        return stars;
+    }
+
+    public boolean isOccupied() {
+        return isOccupied;
+    }
+
+    public List<Guest> getGuests() {
+        return guests;
+    }
+
+    public LocalDate getCheckInDate() {
+        return checkInDate;
+    }
+
+    public LocalDate getCheckOutDate() {
+        return checkOutDate;
+    }
+
+    @Override
+    public String toString() {
+        String status = isOccupied ? "Занят (" + guests + ") с " + getCheckInDate() + " по " + getCheckOutDate() : "Свободен";
+
+        String maintenance = underMaintenance ? ", На обслуживании" : "";
+        return "Номер " + number + ", Вместимость " + capacity + ", Кол-во звезд: " + stars + ", Цена: " + price + ", Статус: " + status + maintenance;
     }
 
     /**
@@ -79,52 +133,6 @@ public class Room {
         }
     }
 
-    public boolean isUnderMaintenance() {
-        return underMaintenance;
-    }
 
-    public int getNumber() {
-        return number;
-    }
-
-    public int getCapacity() {
-        return capacity;
-    }
-
-    public double getPrice() {
-        return price;
-    }
-
-    public void setPrice(double price) {
-        this.price = price;
-    }
-
-    public int getStars() {
-        return stars;
-    }
-
-    public boolean isOccupied() {
-        return isOccupied;
-    }
-
-    public List<Guest> getGuests() {
-        return guests;
-    }
-
-    public LocalDate getCheckInDate() {
-        return checkInDate;
-    }
-
-    public LocalDate getCheckOutDate() {
-        return checkOutDate;
-    }
-
-    @Override
-    public String toString() {
-        String status = isOccupied ? "Занят (" + guests + ") с " + getCheckInDate() + " по " + getCheckOutDate() : "Свободен";
-
-        String maintenance = underMaintenance ? ", На обслуживании" : "";
-        return "Номер " + number + ", Вместимость " + capacity + ", Кол-во звезд: " + stars + ", Цена: " + price + ", Статус: " + status + maintenance;
-    }
 
 }
