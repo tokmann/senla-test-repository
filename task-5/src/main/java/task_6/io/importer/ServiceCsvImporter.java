@@ -1,5 +1,6 @@
 package task_6.io.importer;
 
+import task_6.io.interfaces.CsvImporter;
 import task_6.model.Guest;
 import task_6.model.Service;
 import task_6.service.GuestManager;
@@ -13,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class ServiceCsvImporter {
+public class ServiceCsvImporter implements CsvImporter {
 
     private final ServiceManager serviceManager;
     private final GuestManager guestManager;
@@ -23,6 +24,7 @@ public class ServiceCsvImporter {
         this.guestManager = guestManager;
     }
 
+    @Override
     public void importFromCsv(String filePath) throws IOException {
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
             reader.readLine();

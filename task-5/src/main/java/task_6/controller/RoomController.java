@@ -16,7 +16,6 @@ import java.util.Scanner;
 public class RoomController {
 
     private final RoomManager roomManager;
-    private final Scanner scanner = new Scanner(System.in);
 
     public RoomController(RoomManager roomManager) {
         this.roomManager = roomManager;

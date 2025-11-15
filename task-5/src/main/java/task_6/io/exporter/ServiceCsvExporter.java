@@ -1,8 +1,8 @@
 package task_6.io.exporter;
 
+import task_6.io.interfaces.CsvExporter;
 import task_6.model.Guest;
 import task_6.model.Service;
-import task_6.repository.interfaces.ServiceRepository;
 import task_6.service.GuestManager;
 import task_6.service.ServiceManager;
 
@@ -11,7 +11,11 @@ import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class ServiceCsvExporter {
+/**
+ * Экспортер данных услуг в CSV формат.
+ * Сериализует информацию об услугах и их связи с гостями.
+ */
+public class ServiceCsvExporter implements CsvExporter {
 
     private final ServiceManager serviceManager;
     private final GuestManager guestManager;
@@ -21,6 +25,12 @@ public class ServiceCsvExporter {
         this.guestManager = guestManager;
     }
 
+    /**
+     * Экспортирует все услуги в CSV файл.
+     * Формат: id,name,description,price,date,guestIds
+     * @param filePath путь для сохранения файла
+     */
+    @Override
     public void exportToCsv(String filePath) throws IOException {
         try (FileWriter writer = new FileWriter(filePath)) {
             writer.write("id,name,description,price,date,guestIds\n");

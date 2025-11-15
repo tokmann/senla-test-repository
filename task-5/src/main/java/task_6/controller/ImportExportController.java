@@ -7,6 +7,10 @@ import task_6.io.importer.GuestCsvImporter;
 import task_6.io.importer.RoomCsvImporter;
 import task_6.io.importer.ServiceCsvImporter;
 
+/**
+ * Контроллер для управления операциями импорта и экспорта данных.
+ * Координирует работу всех CSV-импортеров и экспортеров системы.
+ */
 public class ImportExportController {
 
     private final GuestCsvImporter guestImporter;
@@ -34,28 +38,50 @@ public class ImportExportController {
         this.serviceExporter = serviceExporter;
     }
 
+    /**
+     * Импортирует гостей из CSV файла.
+     * @param path путь к CSV файлу
+     */
     public void importGuests(String path) throws Exception {
         guestImporter.importFromCsv(path);
     }
 
+    /**
+     * Экспортирует гостей в CSV файл.
+     * @param path путь для сохранения CSV файла
+     */
     public void exportGuests(String path) throws Exception {
         guestExporter.exportToCsv(path);
     }
 
-    // комнаты
+    /**
+     * Импортирует комнаты из CSV файла.
+     * @param path путь к CSV файлу
+     */
     public void importRooms(String path) throws Exception {
         roomImporter.importFromCsv(path);
     }
 
+    /**
+     * Экспортирует комнаты в CSV файл.
+     * @param path путь для сохранения CSV файла
+     */
     public void exportRooms(String path) throws Exception {
         roomExporter.exportToCsv(path);
     }
 
-    // услуги
+    /**
+     * Импортирует услуги из CSV файла.
+     * @param path путь к CSV файлу
+     */
     public void importServices(String path) throws Exception {
         serviceImporter.importFromCsv(path);
     }
 
+    /**
+     * Экспортирует услуги в CSV файл.
+     * @param path путь для сохранения CSV файла
+     */
     public void exportServices(String path) throws Exception {
         serviceExporter.exportToCsv(path);
     }

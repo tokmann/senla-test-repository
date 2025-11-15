@@ -1,6 +1,7 @@
 package task_6.io.importer;
 
 import task_6.controller.GuestController;
+import task_6.io.interfaces.CsvImporter;
 import task_6.model.Guest;
 import task_6.model.Room;
 import task_6.model.Service;
@@ -15,7 +16,7 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class GuestCsvImporter {
+public class GuestCsvImporter implements CsvImporter {
 
     private final GuestController guestController;
     private final GuestManager guestManager;
@@ -32,6 +33,7 @@ public class GuestCsvImporter {
         this.serviceManager = serviceManager;
     }
 
+    @Override
     public void importFromCsv(String filePath) throws IOException {
         List<GuestImportData> importDataList = readCsvData(filePath);
         Map<String, Guest> createdGuests = createOrUpdateGuestsWithServices(importDataList);
