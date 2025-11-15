@@ -1,0 +1,4 @@
+id,number,capacity,price,stars,isOccupied,underMaintenance,checkInDate,checkOutDate,guestIds
+1,101,2,3500,3,true,false,2025-11-10,2025-11-15
+2,102,3,4500,4,false,false,,
+3,103,1,2500,2,false,true,,

@@ -23,7 +23,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>task_5.app.ConsoleHotelApplication</mainClass>
+                            <mainClass>task_6.app.App</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

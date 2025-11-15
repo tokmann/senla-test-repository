@@ -1,0 +1,4 @@
+id,age,firstName,secondName,roomId,serviceIds
+1,25,Иван,Иванов,1,1;2
+2,30,Мария,Петрова,2,3
+3,47,Алексей,Сидоров,2,
