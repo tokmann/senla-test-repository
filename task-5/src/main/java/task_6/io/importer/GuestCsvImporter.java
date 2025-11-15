@@ -16,6 +16,12 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Импортер данных гостей из CSV формата.
+ * Обрабатывает файлы с информацией о гостях, их комнатах и услугах.
+ * Поддерживает создание новых гостей и обновление существующих по ID.
+ * Восстанавливает связи гостей с комнатами и услугами.
+ */
 public class GuestCsvImporter implements CsvImporter {
 
     private final GuestController guestController;
@@ -33,6 +39,11 @@ public class GuestCsvImporter implements CsvImporter {
         this.serviceManager = serviceManager;
     }
 
+    /**
+     * Импортирует гостей из CSV файла.
+     * Формат файла: id,age,firstName,secondName,roomId,serviceIds
+     * @param filePath путь к CSV файлу
+     */
     @Override
     public void importFromCsv(String filePath) throws IOException {
         List<GuestImportData> importDataList = readCsvData(filePath);
@@ -41,7 +52,9 @@ public class GuestCsvImporter implements CsvImporter {
     }
 
     /**
-     * Чтение данных из CSV файла
+     * Читает и парсит данные из CSV файла.
+     * @param filePath путь к CSV файлу
+     * @return список данных для импорта гостей
      */
     private List<GuestImportData> readCsvData(String filePath) throws IOException {
         List<GuestImportData> importDataList = new ArrayList<>();
@@ -60,7 +73,10 @@ public class GuestCsvImporter implements CsvImporter {
     }
 
     /**
-     * Парсинг одной строки CSV
+     * Парсит одну строку CSV в объект GuestImportData.
+     * Обрабатывает опциональные поля roomId и serviceIds.
+     * @param line строка CSV файла
+     * @return данные гостя для импорта
      */
     private GuestImportData parseCsvLine(String line) {
         String[] parts = line.split(",", -1);
@@ -76,7 +92,10 @@ public class GuestCsvImporter implements CsvImporter {
     }
 
     /**
-     * Парсинг списка ID услуг
+     * Парсит строку с ID услуг в список Long.
+     * Формат строки: "1;2;3"
+     * @param serviceIdsStr строка с ID услуг через точку с запятой
+     * @return список ID услуг
      */
     private List<Long> parseServiceIds(String serviceIdsStr) {
         List<Long> serviceIds = new ArrayList<>();
@@ -92,7 +111,11 @@ public class GuestCsvImporter implements CsvImporter {
     }
 
     /**
-     * Создание гостей и добавление услуг
+     * Создает или обновляет гостей и добавляет им услуги.
+     * Если гость с таким ID уже существует - он обновляется.
+     * Если нет - создается новый гость.
+     * @param importDataList список данных для импорта
+     * @return мапа созданных/обновленных гостей (ключ - полное имя)
      */
     private Map<String, Guest> createOrUpdateGuestsWithServices(List<GuestImportData> importDataList) {
         Map<String, Guest> processedGuests = new HashMap<>();
@@ -119,7 +142,11 @@ public class GuestCsvImporter implements CsvImporter {
     }
 
     /**
-     * Обновление существующего гостя
+     * Обновляет существующего гостя новыми данными.
+     * Выселяет гостя из текущей комнаты перед обновлением.
+     * @param guest существующий гость
+     * @param data новые данные из CSV
+     * @return обновленный гость
      */
     private Guest updateExistingGuest(Guest guest, GuestImportData data) {
         if (guest.getGuestRoom() != null) {
@@ -131,7 +158,9 @@ public class GuestCsvImporter implements CsvImporter {
     }
 
     /**
-     * Создание нового гостя
+     * Создает нового гостя на основе данных из CSV.
+     * @param data данные гостя из CSV
+     * @return созданный гость
      */
     private Guest createNewGuest(GuestImportData data) {
         Guest guest = new Guest(0, data.age(), data.firstName(), data.secondName(), null, new ArrayList<>());
@@ -141,13 +170,17 @@ public class GuestCsvImporter implements CsvImporter {
 
 
     /**
-     * Обновление услуг гостя
+     * Обновляет список услуг гостя.
+     * Очищает существующие услуги и добавляет новые из CSV.
+     * @param guest гость для обновления
+     * @param serviceIds список ID услуг из CSV
      */
     private void updateGuestServices(Guest guest, List<Long> serviceIds) {
         guest.getGuestServices().clear();
         for (Long serviceId : serviceIds) {
-            Service service = serviceManager.getServiceById(serviceId);
-            if (service != null) {
+            Optional<Service> serviceOpt = serviceManager.getServiceById(serviceId);
+            if (serviceOpt.isPresent()) {
+                Service service = serviceOpt.get();
                 guestManager.addServiceToGuest(guest, service);
                 System.out.println("  Добавлена услуга '" + service.getName() + "' гостю " + guest.getFullName());
             } else {
@@ -157,7 +190,9 @@ public class GuestCsvImporter implements CsvImporter {
     }
 
     /**
-     * Заселение гостей в комнаты
+     * Заселяет гостей в комнаты на основе данных из CSV.
+     * @param importDataList список данных импорта
+     * @param createdGuests карта созданных гостей
      */
     private void checkInGuestsToRooms(List<GuestImportData> importDataList, Map<String, Guest> createdGuests) {
         for (GuestImportData data : importDataList) {
@@ -168,7 +203,10 @@ public class GuestCsvImporter implements CsvImporter {
     }
 
     /**
-     * Заселение одного гостя в комнату
+     * Заселяет одного гостя в комнату.
+     * Ищет комнату по ID и гостя по имени.
+     * @param data данные гостя из CSV
+     * @param createdGuests карта созданных гостей
      */
     private void checkInGuest(GuestImportData data, Map<String, Guest> createdGuests) {
         String fullName = data.firstName() + " " + data.secondName();
@@ -202,7 +240,8 @@ public class GuestCsvImporter implements CsvImporter {
     }
 
     /**
-     * Вспомогательный класс для хранения данных импорта
+     * Вспомогательная запись для хранения данных импорта гостя.
+     * Содержит все поля из CSV файла в структурированном виде.
      */
     private record GuestImportData(
             long id,

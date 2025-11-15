@@ -14,6 +14,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Импортер данных услуг из CSV формата.
+ * Обрабатывает файлы с информацией об услугах отеля и их связи с гостями.
+ * Поддерживает создание новых услуг и обновление существующих по ID.
+ * Восстанавливает связи услуг с гостями на основе данных из CSV.
+ */
 public class ServiceCsvImporter implements CsvImporter {
 
     private final ServiceManager serviceManager;
@@ -24,6 +30,11 @@ public class ServiceCsvImporter implements CsvImporter {
         this.guestManager = guestManager;
     }
 
+    /**
+     * Импортирует услуги из CSV файла.
+     * Формат файла: id,name,description,price,date,guestIds
+     * @param filePath путь к CSV файлу
+     */
     @Override
     public void importFromCsv(String filePath) throws IOException {
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
@@ -40,23 +51,29 @@ public class ServiceCsvImporter implements CsvImporter {
                 LocalDate date = LocalDate.parse(p[4]);
                 List<Long> guestIds = p.length > 5 ? parseGuestIds(p[5]) : new ArrayList<>();
 
-                Service service = serviceManager.getServiceById(id);
-                if (service != null) {
-                    updateService(service, name, description, price, date);
+                Optional<Service> serviceOpt = serviceManager.getServiceById(id);
+                if (serviceOpt.isPresent()) {
+                    updateService(serviceOpt.get(), name, description, price, date);
                     System.out.println("Обновлена услуга: " + name);
                 } else {
-                    service = new Service(id, name, description, price, date);
+                    Service service = new Service(id, name, description, price, date);
                     serviceManager.addService(service);
                     System.out.println("Добавлена услуга: " + name);
                 }
 
                 if (!guestIds.isEmpty()) {
-                    restoreServiceGuests(service, guestIds);
+                    restoreServiceGuests(serviceOpt.get(), guestIds);
                 }
             }
         }
     }
 
+    /**
+     * Парсит строку с ID гостей в список Long.
+     * Формат строки: "1;2;3"
+     * @param guestIdsStr строка с ID гостей через точку с запятой
+     * @return список ID гостей
+     */
     private List<Long> parseGuestIds(String guestIdsStr) {
         List<Long> guestIds = new ArrayList<>();
         if (guestIdsStr != null && !guestIdsStr.isBlank()) {
@@ -70,6 +87,15 @@ public class ServiceCsvImporter implements CsvImporter {
         return guestIds;
     }
 
+    /**
+     * Обновляет данные существующей услуги.
+     * Изменяет название, описание, цену и дату услуги.
+     * @param service услуга для обновления
+     * @param name новое название услуги
+     * @param description новое описание услуги
+     * @param price новая цена услуги
+     * @param date новая дата услуги
+     */
     private void updateService(Service service, String name, String description, double price, LocalDate date) {
         service.setName(name);
         service.setDescription(description);
@@ -78,7 +104,11 @@ public class ServiceCsvImporter implements CsvImporter {
     }
 
     /**
-     * Восстанавливаем связи услуги с гостями
+     * Восстанавливает связи услуги с гостями.
+     * Находит гостей по ID из CSV и добавляет им услугу.
+     * Если связь уже существует - не добавляет дубликат.
+     * @param service услуга для привязки к гостям
+     * @param guestIds список ID гостей из CSV
      */
     private void restoreServiceGuests(Service service, List<Long> guestIds) {
         for (Long guestId : guestIds) {

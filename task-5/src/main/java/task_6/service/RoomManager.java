@@ -27,7 +27,11 @@ public class RoomManager {
     }
 
     /**
-     * Добавляет номер в систему, если номер с таким номером ещё не существует.
+     * Добавляет номер в систему.
+     * Если номер с таким ID уже существует - обновляет его.
+     * Если номер с таким физическим номером уже существует - отклоняет добавление.
+     * @param room комната для добавления
+     * @return true если добавление/обновление успешно, false если номер уже существует
      */
     public boolean addRoom(Room room) {
         // Проверяем по ID для обновления
@@ -50,6 +54,11 @@ public class RoomManager {
     /**
      * Заселяет гостей в номер на указанный период.
      * Обновляет связи между гостями и номером.
+     * @param roomNumber номер комнаты для заселения
+     * @param guests список гостей для заселения
+     * @param checkInDate дата заселения
+     * @param checkOutDate дата выселения
+     * @return true если заселение успешно, false если комната не найдена или недоступна
      */
     public boolean checkIn(int roomNumber, List<Guest> guests, LocalDate checkInDate, LocalDate checkOutDate) {
         Optional<Room> optionalRoom = repository.findByNumber(roomNumber);
@@ -64,7 +73,10 @@ public class RoomManager {
     }
 
     /**
-     * Выселяет всех гостей из указанного номера и удаляет их из репозитория гостей.
+     * Выселяет всех гостей из указанного номера.
+     * Удаляет гостей из репозитория.
+     * @param roomNumber номер комнаты для выселения
+     * @return true если выселение успешно, false если комната не найдена
      */
     public boolean checkOut(int roomNumber) {
         Optional<Room> optionalRoom = repository.findByNumber(roomNumber);
@@ -80,6 +92,9 @@ public class RoomManager {
 
     /**
      * Помечает номер как находящийся на обслуживании.
+     * Номер можно перевести на обслуживание только если он свободен.
+     * @param roomNumber номер комнаты
+     * @param maintenance true для установки на обслуживание, false для снятия
      */
     public void setRoomMaintenance(int roomNumber, boolean maintenance) {
         repository.findByNumber(roomNumber).ifPresent(room -> room.setMaintenance(maintenance));
@@ -87,27 +102,45 @@ public class RoomManager {
 
     /**
      * Изменяет цену номера.
+     * @param roomNumber номер комнаты
+     * @param newPrice новая цена за сутки
      */
     public void changeRoomPrice(int roomNumber, double newPrice) {
         repository.findByNumber(roomNumber).ifPresent(room -> room.setPrice(newPrice));
     }
 
+    /**
+     * Возвращает список комнат, отсортированный по указанному критерию.
+     * @param option критерий сортировки комнат
+     * @return отсортированный список комнат
+     */
     public List<Room> getSortedRooms(RoomSortOption option) {
         return repository.findAll().stream()
                 .sorted(option.getComparator())
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Возвращает все комнаты системы.
+     * @return список всех комнат
+     */
     public List<Room> getAllRooms() {
         return repository.findAll();
     }
 
+    /**
+     * Находит комнату по физическому номеру.
+     * @param roomNumber физический номер комнаты
+     * @return Optional с найденной комнатой или empty если не найдена
+     */
     public Optional<Room> findRoomByNumber(int roomNumber) {
         return repository.findByNumber(roomNumber);
     }
 
     /**
      * Возвращает список всех свободных и не находящихся на обслуживании номеров.
+     * @param option критерий сортировки результатов
+     * @return отсортированный список свободных комнат
      */
     public List<Room> getFreeRooms(RoomSortOption option) {
         return repository.findAll().stream()
@@ -118,6 +151,7 @@ public class RoomManager {
 
     /**
      * Подсчитывает количество свободных номеров.
+     * @return количество свободных номеров
      */
     public int countFreeRooms() {
         return (int) repository.findAll().stream()
@@ -127,6 +161,9 @@ public class RoomManager {
 
     /**
      * Возвращает список номеров, которые освободятся к указанной дате.
+     * Включает уже свободные номера и номера, которые будут свободны к дате.
+     * @param date дата для проверки доступности
+     * @return список доступных к дате номеров
      */
     public List<Room> findRoomsThatWillBeFree(LocalDate date) {
         return repository.findAll().stream()
@@ -138,6 +175,9 @@ public class RoomManager {
 
     /**
      * Вычисляет полную стоимость проживания в номере по количеству дней.
+     * Минимальная продолжительность проживания - 1 день.
+     * @param room комната для расчета стоимости
+     * @return общая стоимость проживания
      */
     public double fullRoomPrice(Room room) {
         if (room.getCheckInDate() == null || room.getCheckOutDate() == null) return 0.0;
@@ -147,7 +187,10 @@ public class RoomManager {
     }
 
     /**
-     * Возвращает историю последних заселений в номер (в виде строковых записей).
+     * Возвращает историю последних заселений в номер.
+     * @param roomNumber номер комнаты
+     * @param historyLength количество последних записей для возврата
+     * @return список строк с историей проживания
      */
     public List<String> getRoomHistory(int roomNumber, int historyLength) {
         return repository.findByNumber(roomNumber)
@@ -155,12 +198,21 @@ public class RoomManager {
                 .orElse(List.of());
     }
 
+    /**
+     * Находит комнату по идентификатору.
+     * @param id идентификатор комнаты
+     * @return Optional с найденной комнатой или empty если не найдена
+     */
     public Optional<Room> findRoomById(long id) {
-        return repository.findAll().stream()
-                .filter(r -> r.getId() == id)
-                .findFirst();
+        return repository.findById(id);
     }
 
+    /**
+     * Обновляет данные существующей комнаты.
+     * Изменяет цену и статус обслуживания, если комната свободная.
+     * @param existing существующая комната
+     * @param newData новые данные
+     */
     private void updateExistingRoom(Room existing, Room newData) {
         existing.setPrice(newData.getPrice());
         if (!existing.isOccupied()) {

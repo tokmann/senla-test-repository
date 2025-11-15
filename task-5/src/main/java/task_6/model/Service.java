@@ -3,7 +3,7 @@ package task_6.model;
 import java.time.LocalDate;
 
 /**
- * Модель дополнительной услуги.
+ * Модель дополнительной услуги отеля.
  */
 public class Service {
 

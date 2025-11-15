@@ -14,6 +14,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Импортер данных комнат из CSV формата.
+ * Обрабатывает файлы с информацией о комнатах, их статусе и проживающих гостях.
+ * Восстанавливает заселение гостей в комнаты на основе данных из CSV.
+ */
 public class RoomCsvImporter implements CsvImporter  {
 
     private final RoomManager roomManager;
@@ -24,6 +29,12 @@ public class RoomCsvImporter implements CsvImporter  {
         this.guestManager = guestManager;
     }
 
+    /**
+     * Импортирует комнаты из CSV файла.
+     * Формат файла: id,number,capacity,price,stars,isOccupied,underMaintenance,checkInDate,checkOutDate,guestIds
+     * Обрабатывает опциональные поля дат и списка гостей.
+     * @param filePath путь к CSV файлу
+     */
     @Override
     public void importFromCsv(String filePath) throws IOException {
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
@@ -63,6 +74,12 @@ public class RoomCsvImporter implements CsvImporter  {
         }
     }
 
+    /**
+     * Парсит строку с ID гостей в список Long.
+     * Формат строки: "1;2;3"
+     * @param guestIdsStr строка с ID гостей через точку с запятой
+     * @return список ID гостей
+     */
     private List<Long> parseGuestIds(String guestIdsStr) {
         List<Long> guestIds = new ArrayList<>();
         if (guestIdsStr != null && !guestIdsStr.isBlank()) {
@@ -77,7 +94,12 @@ public class RoomCsvImporter implements CsvImporter  {
     }
 
     /**
-     * Восстанавливаем заселение гостей в комнату
+     * Восстанавливает заселение гостей в комнату.
+     * Находит гостей по ID, устанавливает связи и заселяет в комнату.
+     * @param room комната для заселения
+     * @param guestIds список ID гостей для заселения
+     * @param checkInDate дата заселения
+     * @param checkOutDate дата выселения
      */
     private void restoreRoomOccupancy(Room room, List<Long> guestIds, LocalDate checkInDate, LocalDate checkOutDate) {
         List<Guest> guestsToCheckIn = new ArrayList<>();

@@ -1,7 +1,7 @@
 package task_6.service;
 
 import task_6.model.Service;
-import task_6.repository.impl.InMemoryServiceRepository;
+import task_6.repository.InMemoryServiceRepository;
 import task_6.repository.interfaces.ServiceRepository;
 import task_6.view.enums.ServiceSortOption;
 
@@ -22,7 +22,10 @@ public class ServiceManager {
     }
 
     /**
-     * Добавляет новую услугу, если такой ещё нет в системе.
+     * Добавляет новую услугу в систему.
+     * Услуга добавляется только если услуги с таким названием еще нет.
+     * @param service услуга для добавления
+     * @return добавленная услуга или null если услуга с таким названием уже существует
      */
     public Service addService(Service service) {
         Optional<Service> existing = repository.findByName(service.getName());
@@ -35,6 +38,8 @@ public class ServiceManager {
 
     /**
      * Изменяет цену существующей услуги.
+     * @param serviceName название услуги
+     * @param newPrice новая цена услуги
      */
     public void changeServicePrice(String serviceName, double newPrice) {
         repository.findByName(serviceName).ifPresent(service -> service.setPrice(newPrice));
@@ -42,6 +47,8 @@ public class ServiceManager {
 
     /**
      * Возвращает список услуг, отсортированный по указанному критерию.
+     * @param option критерий сортировки услуг
+     * @return отсортированный список услуг
      */
     public List<Service> getSortedServices(ServiceSortOption option) {
         return repository.findAll().stream()
@@ -49,12 +56,19 @@ public class ServiceManager {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Возвращает все услуги системы.
+     * @return список всех услуг
+     */
     public List<Service> getAllServices() {
         return repository.findAll();
     }
 
     /**
-     * Ищет услугу по имени (без учёта регистра).
+     * Ищет услугу по названию (без учёта регистра).
+     * Убирает пробелы в начале и конце названия перед поиском.
+     * @param name название услуги для поиска
+     * @return найденная услуга или null если не найдена
      */
     public Service findByName(String name) {
         return repository.findAll().stream()
@@ -63,10 +77,12 @@ public class ServiceManager {
                 .orElse(null);
     }
 
-    public Service getServiceById(long id) {
-        return repository.findAll().stream()
-                .filter(s -> s.getId() == id)
-                .findFirst()
-                .orElse(null);
+    /**
+     * Находит услугу по идентификатору.
+     * @param id идентификатор услуги
+     * @return найденная услуга или null если не найдена
+     */
+    public Optional<Service> getServiceById(long id) {
+        return repository.findById(id);
     }
 }
