@@ -29,21 +29,23 @@ public class ServiceCsvImporter {
 
             String line;
             while ((line = reader.readLine()) != null) {
-                String[] p = line.split(",");
+                String[] p = line.split(",", -1);
 
                 long id = Long.parseLong(p[0]);
                 String name = p[1];
                 String description = p[2];
                 double price = Double.parseDouble(p[3]);
                 LocalDate date = LocalDate.parse(p[4]);
-                List<Long> guestIds = parseGuestIds(p[5]);
+                List<Long> guestIds = p.length > 5 ? parseGuestIds(p[5]) : new ArrayList<>();
 
                 Service service = serviceManager.getServiceById(id);
                 if (service != null) {
                     updateService(service, name, description, price, date);
+                    System.out.println("Обновлена услуга: " + name);
                 } else {
                     service = new Service(id, name, description, price, date);
                     serviceManager.addService(service);
+                    System.out.println("Добавлена услуга: " + name);
                 }
 
                 if (!guestIds.isEmpty()) {

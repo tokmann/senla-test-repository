@@ -8,7 +8,7 @@ import java.time.LocalDate;
 public class Service {
 
     private long id;
-    private final String name;
+    private String name;
     private String description;
     private double price;
     private LocalDate date;
@@ -27,6 +27,10 @@ public class Service {
 
     public String getName() {
         return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getDescription() {

@@ -29,7 +29,7 @@ public class RoomCsvImporter {
 
             String line;
             while ((line = reader.readLine()) != null) {
-                String[] p = line.split(",");
+                String[] p = line.split(",", -1);
 
                 long id = Long.parseLong(p[0]);
                 int number = Integer.parseInt(p[1]);
@@ -38,9 +38,9 @@ public class RoomCsvImporter {
                 int stars = Integer.parseInt(p[4]);
                 boolean isOccupied = Boolean.parseBoolean(p[5]);
                 boolean underMaintenance = Boolean.parseBoolean(p[6]);
-                LocalDate checkInDate = parseDate(p[7]);
-                LocalDate checkOutDate = parseDate(p[8]);
-                List<Long> guestIds = parseGuestIds(p[9]);
+                LocalDate checkInDate = (p.length > 7 && !p[7].isBlank()) ? LocalDate.parse(p[7]) : null;
+                LocalDate checkOutDate = (p.length > 8 && !p[8].isBlank()) ? LocalDate.parse(p[8]) : null;
+                List<Long> guestIds = p.length > 9 ? parseGuestIds(p[9]) : new ArrayList<>();
 
                 Room room = new Room(id, number, capacity, price, stars);
 
@@ -59,10 +59,6 @@ public class RoomCsvImporter {
                 }
             }
         }
-    }
-
-    private LocalDate parseDate(String dateStr) {
-        return dateStr.isBlank() ? null : LocalDate.parse(dateStr);
     }
 
     private List<Long> parseGuestIds(String guestIdsStr) {

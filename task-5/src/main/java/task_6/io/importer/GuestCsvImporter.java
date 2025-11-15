@@ -61,38 +61,31 @@ public class GuestCsvImporter {
      * Парсинг одной строки CSV
      */
     private GuestImportData parseCsvLine(String line) {
-        String[] parts = line.split(",");
+        String[] parts = line.split(",", -1);
 
         long id = Long.parseLong(parts[0]);
         int age = Integer.parseInt(parts[1]);
         String firstName = parts[2];
         String secondName = parts[3];
-        long roomId = parseRoomId(parts[4]);
-        List<Long> serviceIds = parseServiceIds(parts);
+        long roomId = (parts.length > 4 && !parts[4].isBlank()) ? Long.parseLong(parts[4]) : -1;
+        List<Long> serviceIds = parts.length > 5 ? parseServiceIds(parts[5]) : new ArrayList<>();
 
         return new GuestImportData(id, age, firstName, secondName, roomId, serviceIds);
     }
 
     /**
-     * Парсинг ID комнаты (может быть пустым)
-     */
-    private long parseRoomId(String roomIdStr) {
-        return roomIdStr.isBlank() ? -1 : Long.parseLong(roomIdStr);
-    }
-
-    /**
      * Парсинг списка ID услуг
      */
-    private List<Long> parseServiceIds(String[] parts) {
+    private List<Long> parseServiceIds(String serviceIdsStr) {
         List<Long> serviceIds = new ArrayList<>();
-
-        if (parts.length > 5 && !parts[5].isBlank()) {
-            String[] serviceIdArray = parts[5].split(";");
+        if (serviceIdsStr != null && !serviceIdsStr.isBlank()) {
+            String[] serviceIdArray = serviceIdsStr.split(";");
             for (String sid : serviceIdArray) {
-                serviceIds.add(Long.parseLong(sid));
+                if (!sid.isBlank()) {
+                    serviceIds.add(Long.parseLong(sid));
+                }
             }
         }
-
         return serviceIds;
     }
 
