@@ -189,6 +189,7 @@ public class ConsoleUI {
                     7 — Номера свободные к дате
                     8 — Полная стоимость проживания
                     9 — Количество свободных номеров
+                    10 - Изменить статус номера
                     0 — Назад
                     """);
 
@@ -206,6 +207,7 @@ public class ConsoleUI {
                     case "7" -> findRoomsFreeByDate(in);
                     case "8" -> calculateFullRoomPrice(in);
                     case "9" -> consoleView.println("Свободных номеров: " + roomController.countFreeRooms());
+                    case "10" -> changeRoomStatus(in);
                     case "0" -> back = true;
                     default -> consoleView.printInvalidOption();
                 }
@@ -334,8 +336,9 @@ public class ConsoleUI {
         String checkOutInput = scanner.nextLine();
         LocalDate checkOut = checkOutInput.isEmpty() ? checkIn.plusDays(3) : LocalDate.parse(checkOutInput);
 
-        guestController.checkInGuest(guestId, roomNumber, checkIn, checkOut);
-        consoleView.println("Гость успешно заселен в комнату " + roomNumber);
+        boolean success = guestController.checkInGuest(guestId, roomNumber, checkIn, checkOut);
+        if (success) consoleView.println("Гость успешно заселен в комнату " + roomNumber);
+        else consoleView.println("Ошибка заселения");
     }
 
     /**
@@ -467,6 +470,14 @@ public class ConsoleUI {
                 p -> consoleView.println("Полная оплата за номер: " + p),
                 () -> consoleView.println("Номер не найден")
         );
+    }
+
+    private void changeRoomStatus(Scanner scanner) {
+        consoleView.print("Введите номер комнаты: ");
+        int roomNumber = Integer.parseInt(scanner.nextLine());
+        consoleView.print("Введите статус обслуживания (true/false): ");
+        boolean maintenance = Boolean.parseBoolean(scanner.nextLine());
+        roomController.setRoomMaintenance(roomNumber, maintenance);
     }
 
     /**

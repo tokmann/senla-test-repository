@@ -47,6 +47,9 @@ public class Room implements Serializable {
     }
 
     public List<Guest> getGuests() {
+        if (guests == null) {
+            guests = new ArrayList<>();
+        }
         return guests;
     }
 
@@ -175,6 +178,9 @@ public class Room implements Serializable {
 
         if (!isOccupied) {
             this.underMaintenance = maintenance;
+            System.out.println("Обслуживание комнаты: " + maintenance);
+        } else {
+            System.out.println("Комната занята");
         }
     }
 }

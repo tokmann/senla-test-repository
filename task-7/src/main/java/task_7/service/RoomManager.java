@@ -90,9 +90,7 @@ public class RoomManager {
             return false;
         }
         Room room = optionalRoom.get();
-        if (room.isOccupied()) {
-            return false;
-        }
+
         if (room.isUnderMaintenance()) {
             return false;
         }

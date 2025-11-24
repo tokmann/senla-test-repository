@@ -60,4 +60,9 @@ public class RoomController {
     public boolean addRoom(Room room) {
         return roomManager.addRoom(room);
     }
+
+    /** Изменение статуса номера */
+    public void setRoomMaintenance(int roomNumber, boolean maintenance) {
+        roomManager.setRoomMaintenance(roomNumber, maintenance);
+    }
 }

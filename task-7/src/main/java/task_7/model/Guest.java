@@ -68,6 +68,9 @@ public class Guest implements Serializable {
     }
 
     public List<Service> getGuestServices() {
+        if (services == null) {
+            services = new ArrayList<>();
+        }
         return services;
     }
 
