@@ -3,6 +3,7 @@ package task_7.controller;
 import task_7.controller.interfaces.IServiceController;
 import task_7.model.Service;
 import task_7.service.ServiceManager;
+import task_7.service.interfaces.IServiceManager;
 import task_7.view.enums.ServiceSortOption;
 
 import java.util.List;
@@ -12,9 +13,9 @@ import java.util.List;
  * Отвечает за добавление и получение услуг с учётом сортировки.
  */
 public class ServiceController implements IServiceController {
-    private final ServiceManager serviceManager;
+    private final IServiceManager serviceManager;
 
-    public ServiceController(ServiceManager serviceManager) {
+    public ServiceController(IServiceManager serviceManager) {
         this.serviceManager = serviceManager;
     }
 

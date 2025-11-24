@@ -3,6 +3,7 @@ package task_7.controller;
 import task_7.controller.interfaces.IRoomController;
 import task_7.model.Room;
 import task_7.service.RoomManager;
+import task_7.service.interfaces.IRoomManager;
 import task_7.view.enums.RoomSortOption;
 
 import java.time.LocalDate;
@@ -15,9 +16,9 @@ import java.util.Optional;
  */
 public class RoomController implements IRoomController {
 
-    private final RoomManager roomManager;
+    private final IRoomManager roomManager;
 
-    public RoomController(RoomManager roomManager) {
+    public RoomController(IRoomManager roomManager) {
         this.roomManager = roomManager;
     }
 

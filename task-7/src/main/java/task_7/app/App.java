@@ -16,6 +16,9 @@ import task_7.repository.interfaces.ServiceRepository;
 import task_7.service.GuestManager;
 import task_7.service.RoomManager;
 import task_7.service.ServiceManager;
+import task_7.service.interfaces.IGuestManager;
+import task_7.service.interfaces.IRoomManager;
+import task_7.service.interfaces.IServiceManager;
 import task_7.ui.ConsoleUI;
 import task_7.view.ConsoleView;
 import task_7.view.factory.UIFactory;
@@ -39,9 +42,9 @@ public class App {
         GuestRepository inMemoryGuestRepository = new InMemoryGuestRepository();
         RoomRepository inMemoryRoomRepository = new InMemoryRoomRepository();
         ServiceRepository inMemoryServiceRepository = new InMemoryServiceRepository();
-        GuestManager guestManager = new GuestManager(inMemoryGuestRepository);
-        RoomManager roomManager = new RoomManager(inMemoryRoomRepository, guestManager);
-        ServiceManager serviceManager = new ServiceManager(inMemoryServiceRepository);
+        IGuestManager guestManager = new GuestManager(inMemoryGuestRepository);
+        IRoomManager roomManager = new RoomManager(inMemoryRoomRepository, guestManager);
+        IServiceManager serviceManager = new ServiceManager(inMemoryServiceRepository);
 
         // Менеджер состояния для сериализации
         StateManager stateManager = new StateManager(guestManager, roomManager, serviceManager);

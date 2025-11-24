@@ -6,6 +6,9 @@ import task_7.model.Service;
 import task_7.service.GuestManager;
 import task_7.service.RoomManager;
 import task_7.service.ServiceManager;
+import task_7.service.interfaces.IGuestManager;
+import task_7.service.interfaces.IRoomManager;
+import task_7.service.interfaces.IServiceManager;
 
 import java.io.*;
 import java.util.*;
@@ -15,11 +18,11 @@ public class StateManager {
 
     private static final String STATE_FILE = "hotel.state";
 
-    private final GuestManager guestManager;
-    private final RoomManager roomManager;
-    private final ServiceManager serviceManager;
+    private final IGuestManager guestManager;
+    private final IRoomManager roomManager;
+    private final IServiceManager serviceManager;
 
-    public StateManager(GuestManager guestManager, RoomManager roomManager, ServiceManager serviceManager) {
+    public StateManager(IGuestManager guestManager, IRoomManager roomManager, IServiceManager serviceManager) {
         this.guestManager = guestManager;
         this.roomManager = roomManager;
         this.serviceManager = serviceManager;

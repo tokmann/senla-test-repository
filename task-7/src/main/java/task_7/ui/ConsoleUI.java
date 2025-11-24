@@ -1,9 +1,5 @@
 package task_7.ui;
 
-import task_7.controller.GuestController;
-import task_7.controller.ImportExportController;
-import task_7.controller.RoomController;
-import task_7.controller.ServiceController;
 import task_7.controller.interfaces.IGuestController;
 import task_7.controller.interfaces.IRoomController;
 import task_7.controller.interfaces.IServiceController;
@@ -12,18 +8,15 @@ import task_7.exceptions.ValidationException;
 import task_7.exceptions.guests.GuestAlreadyCheckedInException;
 import task_7.exceptions.guests.GuestNotCheckedInException;
 import task_7.exceptions.guests.GuestNotFoundException;
-import task_7.exceptions.io.FileNotFoundException;
-import task_7.exceptions.io.ImportExportException;
-import task_7.exceptions.io.InvalidFileFormatException;
 import task_7.exceptions.rooms.*;
 import task_7.exceptions.services.ServiceAlreadyExistsException;
 import task_7.exceptions.services.ServiceNotFoundException;
 import task_7.model.Guest;
 import task_7.model.Room;
 import task_7.model.Service;
-import task_7.service.GuestManager;
-import task_7.service.RoomManager;
-import task_7.service.ServiceManager;
+import task_7.service.interfaces.IGuestManager;
+import task_7.service.interfaces.IRoomManager;
+import task_7.service.interfaces.IServiceManager;
 import task_7.view.ConsoleView;
 import task_7.view.enums.GuestSortOption;
 import task_7.view.enums.RoomSortOption;
@@ -45,18 +38,18 @@ public class ConsoleUI {
     private final IGuestController guestController;
     private final IRoomController roomController;
     private final IServiceController serviceController;
-    private final GuestManager guestManager;
-    private final RoomManager roomManager;
-    private final ServiceManager serviceManager;
+    private final IGuestManager guestManager;
+    private final IRoomManager roomManager;
+    private final IServiceManager serviceManager;
     private final Scanner in;
 
     public ConsoleUI(ConsoleView consoleView,
                      IGuestController guestController,
                      IRoomController roomController,
                      IServiceController serviceController,
-                     GuestManager guestManager,
-                     RoomManager roomManager,
-                     ServiceManager serviceManager) {
+                     IGuestManager guestManager,
+                     IRoomManager roomManager,
+                     IServiceManager serviceManager) {
         this.consoleView = consoleView;
         this.guestController = guestController;
         this.roomController = roomController;

@@ -5,6 +5,8 @@ import task_7.exceptions.rooms.RoomNotFoundException;
 import task_7.model.Guest;
 import task_7.model.Room;
 import task_7.repository.interfaces.RoomRepository;
+import task_7.service.interfaces.IGuestManager;
+import task_7.service.interfaces.IRoomManager;
 import task_7.view.enums.RoomSortOption;
 
 import java.time.LocalDate;
@@ -18,12 +20,12 @@ import java.util.stream.Collectors;
  * техническое обслуживание, историю и фильтрацию номеров.
  * Инкапсулирует бизнес-логику, связанную с сущностью {@link Room}.
  */
-public class RoomManager {
+public class RoomManager implements IRoomManager {
 
     private final RoomRepository repository;
-    private final GuestManager guestManager;
+    private final IGuestManager guestManager;
 
-    public RoomManager(RoomRepository repository, GuestManager guestManager) {
+    public RoomManager(RoomRepository repository, IGuestManager guestManager) {
         this.repository = repository;
         this.guestManager = guestManager;
     }
@@ -35,6 +37,7 @@ public class RoomManager {
      * @param room комната для добавления
      * @return true если добавление/обновление успешно, false если номер уже существует
      */
+    @Override
     public boolean addRoom(Room room) {
         if (room.getNumber() <= 0) {
             throw new ValidationException("Номер комнаты должен быть положительным числом");
@@ -75,6 +78,7 @@ public class RoomManager {
      * @param checkOutDate дата выселения
      * @return true если заселение успешно, false если комната не найдена или недоступна
      */
+    @Override
     public boolean checkIn(int roomNumber, List<Guest> guests, LocalDate checkInDate, LocalDate checkOutDate) {
         if (guests == null || guests.isEmpty()) {
             throw new ValidationException("Список гостей не может быть пустым");
@@ -111,6 +115,7 @@ public class RoomManager {
      * @param roomNumber номер комнаты для выселения
      * @return true если выселение успешно, false если комната не найдена
      */
+    @Override
     public boolean checkOut(int roomNumber) {
         Optional<Room> optionalRoom = repository.findByNumber(roomNumber);
         if (optionalRoom.isEmpty()) {
@@ -138,6 +143,7 @@ public class RoomManager {
      * @param roomNumber номер комнаты
      * @param maintenance true для установки на обслуживание, false для снятия
      */
+    @Override
     public void setRoomMaintenance(int roomNumber, boolean maintenance) {
         repository.findByNumber(roomNumber).ifPresent(room -> room.setMaintenance(maintenance));
     }
@@ -147,6 +153,7 @@ public class RoomManager {
      * @param roomNumber номер комнаты
      * @param newPrice новая цена за сутки
      */
+    @Override
     public void changeRoomPrice(int roomNumber, double newPrice) {
         repository.findByNumber(roomNumber).ifPresent(room -> room.setPrice(newPrice));
     }
@@ -156,6 +163,7 @@ public class RoomManager {
      * @param option критерий сортировки комнат
      * @return отсортированный список комнат
      */
+    @Override
     public List<Room> getSortedRooms(RoomSortOption option) {
         return repository.findAll().stream()
                 .sorted(option.getComparator())
@@ -166,6 +174,7 @@ public class RoomManager {
      * Возвращает все комнаты системы.
      * @return список всех комнат
      */
+    @Override
     public List<Room> getAllRooms() {
         return repository.findAll();
     }
@@ -175,6 +184,7 @@ public class RoomManager {
      * @param roomNumber физический номер комнаты
      * @return Optional с найденной комнатой или empty если не найдена
      */
+    @Override
     public Optional<Room> findRoomByNumber(int roomNumber) {
         return repository.findByNumber(roomNumber);
     }
@@ -184,6 +194,7 @@ public class RoomManager {
      * @param option критерий сортировки результатов
      * @return отсортированный список свободных комнат
      */
+    @Override
     public List<Room> getFreeRooms(RoomSortOption option) {
         return repository.findAll().stream()
                 .filter(r -> !r.isOccupied() && !r.isUnderMaintenance())
@@ -195,6 +206,7 @@ public class RoomManager {
      * Подсчитывает количество свободных номеров.
      * @return количество свободных номеров
      */
+    @Override
     public int countFreeRooms() {
         return (int) repository.findAll().stream()
                 .filter(r -> !r.isOccupied())
@@ -207,6 +219,7 @@ public class RoomManager {
      * @param date дата для проверки доступности
      * @return список доступных к дате номеров
      */
+    @Override
     public List<Room> findRoomsThatWillBeFree(LocalDate date) {
         if (date == null) {
             throw new ValidationException("Дата не может быть null");
@@ -224,6 +237,7 @@ public class RoomManager {
      * @param room комната для расчета стоимости
      * @return общая стоимость проживания
      */
+    @Override
     public double fullRoomPrice(Room room) {
         if (room == null) {
             throw new ValidationException("Комната не может быть null");
@@ -242,6 +256,7 @@ public class RoomManager {
      * @param historyLength количество последних записей для возврата
      * @return список строк с историей проживания
      */
+    @Override
     public List<String> getRoomHistory(int roomNumber, int historyLength) {
         if (historyLength <= 0) {
             throw new ValidationException("Длина истории должна быть положительным числом");
@@ -258,6 +273,7 @@ public class RoomManager {
      * @param id идентификатор комнаты
      * @return Optional с найденной комнатой или empty если не найдена
      */
+    @Override
     public Optional<Room> findRoomById(long id) {
         return repository.findById(id);
     }

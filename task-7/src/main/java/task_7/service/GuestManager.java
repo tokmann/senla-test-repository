@@ -9,6 +9,9 @@ import task_7.model.Guest;
 import task_7.model.Room;
 import task_7.model.Service;
 import task_7.repository.interfaces.GuestRepository;
+import task_7.service.interfaces.IGuestManager;
+import task_7.service.interfaces.IRoomManager;
+import task_7.service.interfaces.IServiceManager;
 import task_7.view.enums.GuestSortOption;
 import task_7.view.enums.ServiceSortOption;
 
@@ -23,7 +26,7 @@ import java.util.stream.Collectors;
  * а также за бизнес-логику, связанную с гостями:
  * сортировка, поиск, добавление услуг и т.д.
  */
-public class GuestManager {
+public class GuestManager implements IGuestManager {
 
     private final GuestRepository repository;
 
@@ -35,6 +38,7 @@ public class GuestManager {
      * Добавляет нового гостя в систему.
      * @param guest гость для добавления
      */
+    @Override
     public void addGuest(Guest guest) {
         repository.save(guest);
     }
@@ -44,6 +48,7 @@ public class GuestManager {
      * Гость может быть удален только если он не заселен в комнату.
      * @param guest гость для удаления
      */
+    @Override
     public void removeGuest(Guest guest) {
         if (guest == null) {
             throw new ValidationException("Гость не может быть null");
@@ -61,6 +66,7 @@ public class GuestManager {
      * Возвращает всех гостей системы.
      * @return список всех гостей
      */
+    @Override
     public List<Guest> getAllGuests() {
         return repository.findAll();
     }
@@ -69,6 +75,7 @@ public class GuestManager {
      * Возвращает гостей, которые не заселены в комнаты.
      * @return список незаселенных гостей
      */
+    @Override
     public List<Guest> getGuestsNotCheckedIn() {
         return repository.findAll().stream()
                 .filter(g -> g.getGuestRoom() == null)
@@ -80,6 +87,7 @@ public class GuestManager {
      * Возвращает гостей, заселенных в комнаты.
      * @return список заселенных гостей
      */
+    @Override
     public List<Guest> getGuestsCheckedIn() {
         return repository.findAll().stream()
                 .filter(g -> g.getGuestRoom() != null)
@@ -90,6 +98,7 @@ public class GuestManager {
      * Подсчитывает общее количество гостей в системе.
      * @return количество гостей
      */
+    @Override
     public int countGuests() {
         return repository.findAll().size();
     }
@@ -100,6 +109,7 @@ public class GuestManager {
      * @param option критерий сортировки услуг
      * @return отсортированный список услуг гостя
      */
+    @Override
     public List<Service> getSortedGuestServices(Guest guest, ServiceSortOption option) {
         if (guest == null) {
             throw new ValidationException("Гость не может быть null");
@@ -116,6 +126,7 @@ public class GuestManager {
      * @param option критерий сортировки гостей
      * @return отсортированный список гостей
      */
+    @Override
     public List<Guest> getSortedGuests(GuestSortOption option) {
         return repository.findAll().stream()
                 .sorted(option.getComparator())
@@ -127,6 +138,7 @@ public class GuestManager {
      * @param id идентификатор гостя
      * @return Optional с найденным гостем или empty если не найден
      */
+    @Override
     public Optional<Guest> getGuestById(long id) {
         return repository.findById(id);
     }
@@ -136,6 +148,7 @@ public class GuestManager {
      * @param fullName полное имя гостя в формате "Имя Фамилия"
      * @return найденный гость или null если не найден
      */
+    @Override
     public Guest findGuestByFullName(String fullName) {
         if (fullName == null || fullName.trim().isEmpty()) {
             throw new ValidationException("Полное имя гостя не может быть пустым");
@@ -154,6 +167,7 @@ public class GuestManager {
      * @param guest гость, которому добавляется услуга
      * @param service услуга для добавления
      */
+    @Override
     public void addServiceToGuest(Guest guest, Service service) {
         if (guest == null) {
             throw new ValidationException("Гость не может быть null");
@@ -178,7 +192,9 @@ public class GuestManager {
      * @param roomManager менеджер комнат для выполнения операции заселения
      * @return true если заселение успешно, false в случае ошибки
      */
-    public boolean checkInGuest(long guestId, int roomNumber, LocalDate checkIn, LocalDate checkOut, RoomManager roomManager) {
+    @Override
+    public boolean checkInGuest(long guestId, int roomNumber, LocalDate checkIn,
+                                LocalDate checkOut, IRoomManager roomManager) {
         if (checkIn == null || checkOut == null) {
             throw new ValidationException("Даты заселения и выселения не могут быть null");
         }
@@ -205,6 +221,7 @@ public class GuestManager {
      * Если комната становится пустой, она помечается как свободная.
      * @param guestId идентификатор гостя
      */
+    @Override
     public void checkOutGuest(long guestId) {
         Guest guest = getGuestById(guestId)
                 .orElseThrow(() -> new GuestNotFoundException(guestId));
@@ -228,7 +245,8 @@ public class GuestManager {
      * @param serviceName название услуги
      * @param serviceManager менеджер услуг для поиска услуги
      */
-    public void addServiceToGuestByName(String guestFullName, String serviceName, ServiceManager serviceManager) {
+    @Override
+    public void addServiceToGuestByName(String guestFullName, String serviceName, IServiceManager serviceManager) {
         if (guestFullName == null || guestFullName.trim().isEmpty()) {
             throw new ValidationException("Полное имя гостя не может быть пустым");
         }

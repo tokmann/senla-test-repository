@@ -6,6 +6,7 @@ import task_7.exceptions.services.ServiceNotFoundException;
 import task_7.model.Service;
 import task_7.repository.InMemoryServiceRepository;
 import task_7.repository.interfaces.ServiceRepository;
+import task_7.service.interfaces.IServiceManager;
 import task_7.view.enums.ServiceSortOption;
 
 import java.util.*;
@@ -16,7 +17,7 @@ import java.util.stream.Collectors;
  * Отвечает за добавление, изменение и сортировку услуг.
  * Представляет бизнес-логику над репозиторием {@link InMemoryServiceRepository}.
  */
-public class ServiceManager {
+public class ServiceManager implements IServiceManager {
 
     private final ServiceRepository repository;
 
@@ -30,6 +31,7 @@ public class ServiceManager {
      * @param service услуга для добавления
      * @return добавленная услуга или null если услуга с таким названием уже существует
      */
+    @Override
     public Service addService(Service service) {
         if (service.getName() == null || service.getName().trim().isEmpty()) {
             throw new ValidationException("Название услуги не может быть пустым");
@@ -52,6 +54,7 @@ public class ServiceManager {
      * @param serviceName название услуги
      * @param newPrice новая цена услуги
      */
+    @Override
     public void changeServicePrice(String serviceName, double newPrice) {
         if (serviceName == null || serviceName.trim().isEmpty()) {
             throw new ValidationException("Название услуги не может быть пустым");
@@ -71,6 +74,7 @@ public class ServiceManager {
      * @param option критерий сортировки услуг
      * @return отсортированный список услуг
      */
+    @Override
     public List<Service> getSortedServices(ServiceSortOption option) {
         return repository.findAll().stream()
                 .sorted(option.getComparator())
@@ -81,6 +85,7 @@ public class ServiceManager {
      * Возвращает все услуги системы.
      * @return список всех услуг
      */
+    @Override
     public List<Service> getAllServices() {
         return repository.findAll();
     }
@@ -91,6 +96,7 @@ public class ServiceManager {
      * @param name название услуги для поиска
      * @return найденная услуга или null если не найдена
      */
+    @Override
     public Service findByName(String name) {
         if (name == null || name.trim().isEmpty()) {
             throw new ValidationException("Название услуги не может быть пустым");
@@ -107,6 +113,7 @@ public class ServiceManager {
      * @param id идентификатор услуги
      * @return найденная услуга или null если не найдена
      */
+    @Override
     public Optional<Service> getServiceById(long id) {
         return repository.findById(id);
     }

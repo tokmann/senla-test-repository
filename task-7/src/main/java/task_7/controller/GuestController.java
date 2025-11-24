@@ -6,6 +6,9 @@ import task_7.model.Service;
 import task_7.service.GuestManager;
 import task_7.service.RoomManager;
 import task_7.service.ServiceManager;
+import task_7.service.interfaces.IGuestManager;
+import task_7.service.interfaces.IRoomManager;
+import task_7.service.interfaces.IServiceManager;
 import task_7.view.enums.GuestSortOption;
 import task_7.view.enums.ServiceSortOption;
 
@@ -18,11 +21,11 @@ import java.util.List;
  */
 public class GuestController implements IGuestController {
 
-    private final GuestManager guestManager;
-    private final RoomManager roomManager;
-    private final ServiceManager serviceManager;
+    private final IGuestManager guestManager;
+    private final IRoomManager roomManager;
+    private final IServiceManager serviceManager;
 
-    public GuestController(GuestManager guestManager, RoomManager roomManager, ServiceManager serviceManager) {
+    public GuestController(IGuestManager guestManager, IRoomManager roomManager, IServiceManager serviceManager) {
         this.guestManager = guestManager;
         this.roomManager = roomManager;
         this.serviceManager = serviceManager;
