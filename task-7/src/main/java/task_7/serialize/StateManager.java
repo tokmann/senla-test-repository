@@ -1,4 +1,4 @@
-package task_7.io.serialize;
+package task_7.serialize;
 
 import task_7.model.Guest;
 import task_7.model.Room;

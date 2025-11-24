@@ -3,7 +3,10 @@ package task_7.app;
 import task_7.controller.GuestController;
 import task_7.controller.RoomController;
 import task_7.controller.ServiceController;
-import task_7.io.serialize.StateManager;
+import task_7.controller.interfaces.IGuestController;
+import task_7.controller.interfaces.IRoomController;
+import task_7.controller.interfaces.IServiceController;
+import task_7.serialize.StateManager;
 import task_7.repository.InMemoryGuestRepository;
 import task_7.repository.InMemoryRoomRepository;
 import task_7.repository.InMemoryServiceRepository;
@@ -45,9 +48,9 @@ public class App {
         stateManager.loadState();
 
         // Контроллеры
-        GuestController guestController = new GuestController(guestManager, roomManager, serviceManager);
-        RoomController roomController = new RoomController(roomManager);
-        ServiceController serviceController = new ServiceController(serviceManager);
+        IGuestController guestController = new GuestController(guestManager, roomManager, serviceManager);
+        IRoomController roomController = new RoomController(roomManager);
+        IServiceController serviceController = new ServiceController(serviceManager);
 
         ConsoleUI ui = new ConsoleUI(consoleView, guestController,
                 roomController, serviceController, guestManager,

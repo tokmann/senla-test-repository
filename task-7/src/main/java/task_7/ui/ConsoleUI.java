@@ -4,6 +4,9 @@ import task_7.controller.GuestController;
 import task_7.controller.ImportExportController;
 import task_7.controller.RoomController;
 import task_7.controller.ServiceController;
+import task_7.controller.interfaces.IGuestController;
+import task_7.controller.interfaces.IRoomController;
+import task_7.controller.interfaces.IServiceController;
 import task_7.exceptions.HotelException;
 import task_7.exceptions.ValidationException;
 import task_7.exceptions.guests.GuestAlreadyCheckedInException;
@@ -39,18 +42,18 @@ import java.util.Scanner;
 public class ConsoleUI {
 
     private final ConsoleView consoleView;
-    private final GuestController guestController;
-    private final RoomController roomController;
-    private final ServiceController serviceController;
+    private final IGuestController guestController;
+    private final IRoomController roomController;
+    private final IServiceController serviceController;
     private final GuestManager guestManager;
     private final RoomManager roomManager;
     private final ServiceManager serviceManager;
     private final Scanner in;
 
     public ConsoleUI(ConsoleView consoleView,
-                     GuestController guestController,
-                     RoomController roomController,
-                     ServiceController serviceController,
+                     IGuestController guestController,
+                     IRoomController roomController,
+                     IServiceController serviceController,
                      GuestManager guestManager,
                      RoomManager roomManager,
                      ServiceManager serviceManager) {
