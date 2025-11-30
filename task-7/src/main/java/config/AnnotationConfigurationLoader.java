@@ -2,8 +2,8 @@ package config;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Field;
-import java.util.Properties;
+import java.lang.reflect.*;
+import java.util.*;
 
 public class AnnotationConfigurationLoader {
 
@@ -26,7 +26,7 @@ public class AnnotationConfigurationLoader {
                 if (is == null) throw new RuntimeException("Файл-конфиг не найден: " + fileName);
                 props.load(is);
             } catch (IOException e) {
-                throw new RuntimeException("Файл-конфиг не найден: " + fileName, e);
+                throw new RuntimeException("Ошибка чтения файла конфига: " + fileName, e);
             }
 
             String rawValue = props.getProperty(propertyName);
@@ -35,7 +35,7 @@ public class AnnotationConfigurationLoader {
             field.setAccessible(true);
 
             try {
-                Object converted = convertValue(rawValue, field.getType(), annotation.type());
+                Object converted = convertValue(rawValue, field);
                 field.set(target, converted);
             } catch (Exception e) {
                 throw new RuntimeException("Не удалось установить значение из конфига: " + propertyName, e);
@@ -43,7 +43,10 @@ public class AnnotationConfigurationLoader {
         }
     }
 
-    private static Object convertValue(String value, Class<?> fieldType, ConfigType type) {
+    private static Object convertValue(String value, Field field) throws Exception {
+        ConfigType type = field.getAnnotation(ConfigProperty.class).type();
+        Class<?> fieldType = field.getType();
+
         if (type != ConfigType.AUTO) {
             return switch (type) {
                 case STRING -> value;
@@ -59,7 +62,65 @@ public class AnnotationConfigurationLoader {
         if (fieldType == boolean.class || fieldType == Boolean.class) return Boolean.parseBoolean(value);
         if (fieldType == long.class || fieldType == Long.class) return Long.parseLong(value);
         if (fieldType == double.class || fieldType == Double.class) return Double.parseDouble(value);
+        if (fieldType == String.class) return value;
 
-        return value;
+        if (fieldType.isArray()) {
+            return convertArray(value, fieldType.getComponentType());
+        }
+
+        if (Collection.class.isAssignableFrom(fieldType)) {
+            return convertCollection(value, field);
+        }
+
+        try {
+            Constructor<?> ctor = fieldType.getConstructor(String.class);
+            return ctor.newInstance(value);
+        } catch (NoSuchMethodException ignored) {
+            throw new RuntimeException(
+                    "Не удалось создать объект типа " + fieldType.getName() +
+                            ": нет конструктора (String)"
+            );
+        }
+    }
+
+    private static Object convertArray(String value, Class<?> elementType) {
+        String[] parts = value.split(",");
+        Object array = Array.newInstance(elementType, parts.length);
+
+        for (int i = 0; i < parts.length; i++) {
+            Array.set(array, i, convertSingle(parts[i].trim(), elementType));
+        }
+
+        return array;
+    }
+
+    private static Object convertCollection(String value, Field field) {
+        String[] parts = value.split(",");
+        Collection<Object> collection;
+
+        if (field.getType() == Set.class) {
+            collection = new HashSet<>();
+        } else {
+            collection = new ArrayList<>();
+        }
+
+        Type genericType = field.getGenericType();
+        if (genericType instanceof ParameterizedType pt) {
+            Class<?> elementType = (Class<?>) pt.getActualTypeArguments()[0];
+
+            for (String part : parts) {
+                collection.add(convertSingle(part.trim(), elementType));
+            }
+        }
+
+        return collection;
+    }
+
+    private static Object convertSingle(String raw, Class<?> type) {
+        if (type == Integer.class || type == int.class) return Integer.parseInt(raw);
+        if (type == Boolean.class || type == boolean.class) return Boolean.parseBoolean(raw);
+        if (type == Long.class || type == long.class) return Long.parseLong(raw);
+        if (type == Double.class || type == double.class) return Double.parseDouble(raw);
+        return raw;
     }
 }
