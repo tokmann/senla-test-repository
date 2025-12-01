@@ -118,6 +118,9 @@ public class ServiceManager implements IServiceManager {
         return repository.findById(id);
     }
 
+    /**
+     * Метод для синхронизации Id после десериализации
+     * */
     public void syncIdGen() {
         repository.syncIdGen();
     }

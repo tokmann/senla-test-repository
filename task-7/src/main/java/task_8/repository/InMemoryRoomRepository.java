@@ -90,6 +90,9 @@ public class InMemoryRoomRepository implements RoomRepository {
         }
     }
 
+    /**
+     * Метод для синхронизации Id после десериализации
+     * */
     public void syncIdGen() {
         long maxId = storage.keySet().stream().mapToLong(Long::longValue).max().orElse(0L);
         idGen.set(maxId + 1);

@@ -267,6 +267,9 @@ public class GuestManager implements IGuestManager {
         addServiceToGuest(guest, service);
     }
 
+    /**
+     * Метод для синхронизации Id после десериализации
+     * */
     public void syncIdGen() {
         repository.syncIdGen();
     }

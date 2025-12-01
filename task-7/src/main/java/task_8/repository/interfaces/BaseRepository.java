@@ -36,5 +36,8 @@ public interface BaseRepository<T> {
      */
     List<T> findAll();
 
+    /**
+     * Метод для синхронизации Id после десериализации
+     * */
     void syncIdGen();
 }

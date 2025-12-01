@@ -32,7 +32,7 @@ import task_8.view.factory.UIFactoryProvider;
 public class App {
 
     /**
-     * Точка входа в приложение. Инициализирует все слои приложения:
+     * Точка входа в приложение.
      */
     public static void main(String[] args) {
         DIContainer container = new DIContainer();

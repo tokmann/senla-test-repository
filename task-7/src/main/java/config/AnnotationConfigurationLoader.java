@@ -5,8 +5,19 @@ import java.io.InputStream;
 import java.lang.reflect.*;
 import java.util.*;
 
+/**
+ * Загрузчик конфигураций на основе аннотаций.
+ * Позволяет автоматически загружать значения полей из конфигурационных файлов.
+ */
 public class AnnotationConfigurationLoader {
 
+    /**
+     * Загружает конфигурацию для целевого объекта.
+     * Считывает значения из конфигурационного файла и устанавливает их в поля,
+     * помеченные аннотацией @ConfigProperty.
+     * @param target объект, для которого загружается конфигурация
+     * @throws RuntimeException если файл конфигурации не найден или произошла ошибка при чтении
+     */
     public static void configure(Object target) {
         Class<?> clazz = target.getClass();
 
@@ -43,6 +54,14 @@ public class AnnotationConfigurationLoader {
         }
     }
 
+    /**
+     * Преобразует строковое значение в объект требуемого типа.
+     * Поддерживает примитивные типы, массивы, коллекции и объекты с конструктором String.
+     * @param value строковое значение из конфигурации
+     * @param field поле, в которое должно быть установлено значение
+     * @return преобразованное значение
+     * @throws Exception если преобразование не удалось
+     */
     private static Object convertValue(String value, Field field) throws Exception {
         ConfigType type = field.getAnnotation(ConfigProperty.class).type();
         Class<?> fieldType = field.getType();
@@ -83,6 +102,12 @@ public class AnnotationConfigurationLoader {
         }
     }
 
+    /**
+     * Преобразует строку в массив значений.
+     * @param value строковое представление массива (значения разделены запятыми)
+     * @param elementType тип элементов массива
+     * @return массив преобразованных значений
+     */
     private static Object convertArray(String value, Class<?> elementType) {
         String[] parts = value.split(",");
         Object array = Array.newInstance(elementType, parts.length);
@@ -94,6 +119,13 @@ public class AnnotationConfigurationLoader {
         return array;
     }
 
+    /**
+     * Преобразует строку в коллекцию значений.
+     * Поддерживает List и Set.
+     * @param value строковое представление коллекции (значения разделены запятыми)
+     * @param field поле коллекции
+     * @return коллекция преобразованных значений
+     */
     private static Object convertCollection(String value, Field field) {
         String[] parts = value.split(",");
         Collection<Object> collection;
@@ -116,6 +148,12 @@ public class AnnotationConfigurationLoader {
         return collection;
     }
 
+    /**
+     * Преобразует одиночное строковое значение в указанный тип.
+     * @param raw строковое значение
+     * @param type целевой тип
+     * @return преобразованное значение
+     */
     private static Object convertSingle(String raw, Class<?> type) {
         if (type == Integer.class || type == int.class) return Integer.parseInt(raw);
         if (type == Boolean.class || type == boolean.class) return Boolean.parseBoolean(raw);

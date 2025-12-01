@@ -122,5 +122,8 @@ public interface IGuestManager {
     void addServiceToGuestByName(String guestFullName, String serviceName,
                                         IServiceManager serviceManager);
 
+    /**
+     * Метод для синхронизации Id после десериализации
+     * */
     void syncIdGen();
 }

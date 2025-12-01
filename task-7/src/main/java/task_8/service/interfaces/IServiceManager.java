@@ -55,6 +55,9 @@ public interface IServiceManager {
      */
     Optional<Service> getServiceById(long id);
 
+    /**
+     * Метод для синхронизации Id после десериализации
+     * */
     void syncIdGen();
 
 }

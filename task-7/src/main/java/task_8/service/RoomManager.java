@@ -288,6 +288,9 @@ public class RoomManager implements IRoomManager {
         System.out.println("Обновлена комната ID: " + existing.getId() + ", номер: " + existing.getNumber());
     }
 
+    /**
+     * Метод для синхронизации Id после десериализации
+     * */
     public void syncIdGen() {
         repository.syncIdGen();
     }

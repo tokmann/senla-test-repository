@@ -121,5 +121,8 @@ public interface IRoomManager {
      */
     Optional<Room> findRoomById(long id);
 
+    /**
+     * Метод для синхронизации Id после десериализации
+     * */
     void syncIdGen();
 }

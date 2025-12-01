@@ -28,7 +28,6 @@ public class StateManager {
     @Inject
     private IServiceManager serviceManager;
 
-
     public void saveState() {
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(STATE_FILE))) {
             HotelState state = new HotelState(
