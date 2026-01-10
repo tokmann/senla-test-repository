@@ -28,8 +28,14 @@ CREATE TABLE IF NOT EXISTS service (
                                        name VARCHAR(255) NOT NULL,
                                        description TEXT,
                                        price DOUBLE PRECISION NOT NULL,
-                                       date DATE NOT NULL,
-                                       guest_id BIGINT NOT NULL REFERENCES guest(id) ON DELETE CASCADE
+                                       date DATE NOT NULL
+);
+
+-- Создание таблицы guest_service
+CREATE TABLE IF NOT EXISTS guest_service (
+                                             guest_id BIGINT NOT NULL REFERENCES guest(id) ON DELETE CASCADE,
+                                             service_id BIGINT NOT NULL REFERENCES service(id) ON DELETE CASCADE,
+                                             PRIMARY KEY (guest_id, service_id)
 );
 
 -- Создание таблицы stay_history

@@ -48,11 +48,6 @@ public class App {
 
         ConsoleUI ui = container.getBean(ConsoleUI.class);
 
-        StateManager stateManager = container.getBean(StateManager.class);
-
-        stateManager.loadState();
-        Runtime.getRuntime().addShutdownHook(new Thread(stateManager::saveState));
-
         ui.run();
     }
 }
