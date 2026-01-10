@@ -12,40 +12,17 @@ import java.util.Comparator;
  */
 public enum RoomSortOption {
 
-    /** Сортировка по цене за ночь. */
-    PRICE("Цена",Comparator.comparingDouble(Room::getPrice)),
+    BY_NUMBER(Comparator.comparingInt(Room::getNumber)),
+    BY_PRICE(Comparator.comparingDouble(Room::getPrice)),
+    BY_STARS(Comparator.comparingInt(Room::getStars).reversed());
 
-    /** Сортировка по вместимости номера. */
-    CAPACITY("Вместимость", Comparator.comparingInt(Room::getCapacity)),
-
-    /** Сортировка по количеству звёзд (уровню комфорта). */
-    STARS("Звезды", Comparator.comparing(Room::getStars));
-
-    private final String description;
     private final Comparator<Room> comparator;
 
-    RoomSortOption(String description, Comparator<Room> comparator) {
-        this.description = description;
+    RoomSortOption(Comparator<Room> comparator) {
         this.comparator = comparator;
     }
 
     public Comparator<Room> getComparator() {
         return comparator;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    /**
-     * Возвращает критерий сортировки по описанию.
-     */
-    public static RoomSortOption fromDescription(String input) {
-        for (RoomSortOption option : values()) {
-            if (option.description.equalsIgnoreCase(input.trim())) {
-                return option;
-            }
-        }
-        throw new IllegalArgumentException("Неизвестный критерий сортировки: " + input);
     }
 }

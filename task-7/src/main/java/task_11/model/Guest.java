@@ -15,14 +15,15 @@ public class Guest {
     private int age;
     private String firstName;
     private String secondName;
-    private long roomId; // Foreign key для связи с Room
-    private Room room; // Можно загружать по roomId в DAO
+    private Long roomId;
+    private Room room;
     private List<Service> services;
 
     public Guest() {
+        this.roomId = null;
     }
 
-    public Guest(long id, int age, String firstName, String secondName, long roomId) {
+    public Guest(long id, int age, String firstName, String secondName, Long roomId) {
         this.id = id;
         this.age = age;
         this.firstName = firstName;
@@ -31,7 +32,7 @@ public class Guest {
     }
 
     // Полный конструктор
-    public Guest(long id, int age, String firstName, String secondName, long roomId, Room room, List<Service> services) {
+    public Guest(long id, int age, String firstName, String secondName, Long roomId, Room room, List<Service> services) {
         this.id = id;
         this.age = age;
         this.firstName = firstName;
@@ -73,11 +74,11 @@ public class Guest {
         this.secondName = secondName;
     }
 
-    public long getRoomId() {
+    public Long getRoomId() {
         return roomId;
     }
 
-    public void setRoomId(long roomId) {
+    public void setRoomId(Long roomId) {
         this.roomId = roomId;
     }
 
@@ -87,9 +88,7 @@ public class Guest {
 
     public void setRoom(Room room) {
         this.room = room;
-        if (room != null) {
-            this.roomId = room.getId();
-        }
+        this.roomId = (room != null) ? room.getId() : null;
     }
 
     public List<Service> getServices() {

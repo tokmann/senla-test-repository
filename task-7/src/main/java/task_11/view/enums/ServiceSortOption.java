@@ -12,38 +12,16 @@ import java.util.Comparator;
  */
 public enum ServiceSortOption {
 
-    /** Сортировка по цене. */
-    PRICE("Цена", Comparator.comparing(Service::getPrice)),
+    BY_NAME((s1, s2) -> s1.getName().compareTo(s2.getName())),
+    BY_PRICE(Comparator.comparingDouble(Service::getPrice));
 
-    /** Сортировка по названию. */
-    NAME("Название", Comparator.comparing(Service::getName));
-
-    private final String description;
     private final Comparator<Service> comparator;
 
-    ServiceSortOption(String description, Comparator<Service> comparator) {
-        this.description = description;
+    ServiceSortOption(Comparator<Service> comparator) {
         this.comparator = comparator;
-    }
-
-    public String getDescription() {
-        return description;
     }
 
     public Comparator<Service> getComparator() {
         return comparator;
-    }
-
-    /**
-     * Возвращает вариант сортировки по описанию.
-     *
-     */
-    public static ServiceSortOption fromDescription(String input) {
-        for (ServiceSortOption option : values()) {
-            if (option.description.equalsIgnoreCase(input.trim())) {
-                return option;
-            }
-        }
-        throw new IllegalArgumentException("Неизвестный критерий сортировки: " + input);
     }
 }

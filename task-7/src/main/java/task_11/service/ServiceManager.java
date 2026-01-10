@@ -2,126 +2,129 @@ package task_11.service;
 
 import di.Component;
 import di.Inject;
+import task_11.db.TransactionManager;
 import task_11.exceptions.ValidationException;
 import task_11.exceptions.services.ServiceAlreadyExistsException;
 import task_11.exceptions.services.ServiceNotFoundException;
 import task_11.model.Service;
-import task_11.repository.InMemoryServiceRepository;
-import task_11.repository.interfaces.ServiceRepository;
+
+import task_11.db.interfaces.ServiceRepository;
 import task_11.service.interfaces.IServiceManager;
 import task_11.view.enums.ServiceSortOption;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * Менеджер для управления услугами.
- * Отвечает за добавление, изменение и сортировку услуг.
- * Представляет бизнес-логику над репозиторием {@link InMemoryServiceRepository}.
- */
 @Component
 public class ServiceManager implements IServiceManager {
 
     @Inject
-    private ServiceRepository repository;
+    private ServiceRepository serviceRepository;
 
-    /**
-     * Добавляет новую услугу в систему.
-     * Услуга добавляется только если услуги с таким названием еще нет.
-     * @param service услуга для добавления
-     * @return добавленная услуга или null если услуга с таким названием уже существует
-     */
+    @Inject
+    private TransactionManager transactionManager;
+
     @Override
     public Service addService(Service service) {
-        if (service.getName() == null || service.getName().trim().isEmpty()) {
-            throw new ValidationException("Название услуги не может быть пустым");
-        }
-        if (service.getPrice() < 0) {
-            throw new ValidationException("Цена услуги не может быть отрицательной");
-        }
+        validateService(service);
 
-        Optional<Service> existing = repository.findByName(service.getName());
-        if (existing.isPresent()) {
-            throw new ServiceAlreadyExistsException(service.getName());
-        }
+        transactionManager.beginTransaction();
+        try {
+            Optional<Service> existing = serviceRepository.findByName(service.getName());
+            if (existing.isPresent()) {
+                transactionManager.rollbackTransaction();
+                throw new ServiceAlreadyExistsException(service.getName());
+            }
 
-        repository.save(service);
-        return service;
+            Service savedService = serviceRepository.save(service);
+            transactionManager.commitTransaction();
+            return savedService;
+        } catch (Exception e) {
+            transactionManager.rollbackTransaction();
+            throw e;
+        }
     }
 
-    /**
-     * Изменяет цену существующей услуги.
-     * @param serviceName название услуги
-     * @param newPrice новая цена услуги
-     */
     @Override
     public void changeServicePrice(String serviceName, double newPrice) {
         if (serviceName == null || serviceName.trim().isEmpty()) {
-            throw new ValidationException("Название услуги не может быть пустым");
+            throw new ValidationException("Service name cannot be empty");
         }
         if (newPrice < 0) {
-            throw new ValidationException("Цена услуги не может быть отрицательной");
+            throw new ValidationException("Service price cannot be negative");
         }
 
-        Service service = repository.findByName(serviceName)
-                .orElseThrow(() -> new ServiceNotFoundException(serviceName));
+        transactionManager.beginTransaction();
+        try {
+            Service service = serviceRepository.findByName(serviceName)
+                    .orElseThrow(() -> new ServiceNotFoundException(serviceName));
 
-        service.setPrice(newPrice);
+            service.setPrice(newPrice);
+            serviceRepository.save(service);
+            transactionManager.commitTransaction();
+        } catch (Exception e) {
+            transactionManager.rollbackTransaction();
+            throw e;
+        }
     }
 
-    /**
-     * Возвращает список услуг, отсортированный по указанному критерию.
-     * @param option критерий сортировки услуг
-     * @return отсортированный список услуг
-     */
     @Override
     public List<Service> getSortedServices(ServiceSortOption option) {
-        return repository.findAll().stream()
+        return getAllServices().stream()
                 .sorted(option.getComparator())
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Возвращает все услуги системы.
-     * @return список всех услуг
-     */
     @Override
     public List<Service> getAllServices() {
-        return repository.findAll();
+        transactionManager.beginTransaction();
+        try {
+            List<Service> services = serviceRepository.findAll();
+            transactionManager.commitTransaction();
+            return services;
+        } catch (Exception e) {
+            transactionManager.rollbackTransaction();
+            throw e;
+        }
     }
 
-    /**
-     * Ищет услугу по названию (без учёта регистра).
-     * Убирает пробелы в начале и конце названия перед поиском.
-     * @param name название услуги для поиска
-     * @return найденная услуга или null если не найдена
-     */
     @Override
     public Service findByName(String name) {
         if (name == null || name.trim().isEmpty()) {
-            throw new ValidationException("Название услуги не может быть пустым");
+            throw new ValidationException("Service name cannot be empty");
         }
 
-        return repository.findAll().stream()
-                .filter(s -> s.getName().equalsIgnoreCase(name.trim()))
-                .findFirst()
-                .orElse(null);
+        transactionManager.beginTransaction();
+        try {
+            Service service = serviceRepository.findByName(name.trim())
+                    .orElse(null);
+            transactionManager.commitTransaction();
+            return service;
+        } catch (Exception e) {
+            transactionManager.rollbackTransaction();
+            throw e;
+        }
     }
 
-    /**
-     * Находит услугу по идентификатору.
-     * @param id идентификатор услуги
-     * @return найденная услуга или null если не найдена
-     */
     @Override
     public Optional<Service> getServiceById(long id) {
-        return repository.findById(id);
+        transactionManager.beginTransaction();
+        try {
+            Optional<Service> service = serviceRepository.findById(id);
+            transactionManager.commitTransaction();
+            return service;
+        } catch (Exception e) {
+            transactionManager.rollbackTransaction();
+            throw e;
+        }
     }
 
-    /**
-     * Метод для синхронизации Id после десериализации
-     * */
-    public void syncIdGen() {
-        repository.syncIdGen();
+    private void validateService(Service service) {
+        if (service.getName() == null || service.getName().trim().isEmpty()) {
+            throw new ValidationException("Service name cannot be empty");
+        }
+        if (service.getPrice() < 0) {
+            throw new ValidationException("Service price cannot be negative");
+        }
     }
 }

@@ -5,9 +5,7 @@ import di.Inject;
 import task_11.controller.interfaces.IGuestController;
 import task_11.controller.interfaces.IRoomController;
 import task_11.controller.interfaces.IServiceController;
-import task_11.exceptions.HotelException;
 import task_11.exceptions.ValidationException;
-import task_11.exceptions.guests.GuestAlreadyCheckedInException;
 import task_11.exceptions.guests.GuestNotCheckedInException;
 import task_11.exceptions.guests.GuestNotFoundException;
 import task_11.exceptions.rooms.*;
@@ -25,7 +23,6 @@ import task_11.view.enums.RoomSortOption;
 import task_11.view.enums.ServiceSortOption;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
@@ -58,7 +55,7 @@ public class ConsoleUI {
     @Inject
     private IServiceManager serviceManager;
 
-    private final Scanner in = new Scanner(System.in);
+    private Scanner in = new Scanner(System.in);
 
     /**
      * Запускает главный цикл приложения.
@@ -75,7 +72,6 @@ public class ConsoleUI {
      * Обрабатывает навигацию между разделами и выход из приложения.
      */
     private void mainMenu() {
-
         boolean running = true;
 
         while (running) {
@@ -109,7 +105,6 @@ public class ConsoleUI {
      * Предоставляет операции регистрации, заселения, выселения и управления услугами гостей.
      */
     private void guestMenu() {
-
         boolean back = false;
 
         while (!back) {
@@ -133,33 +128,30 @@ public class ConsoleUI {
 
             try {
                 switch (input) {
-                    case "1" -> registerGuestOnly(in);
-                    case "2" -> showAllGuests(in);
+                    case "1" -> registerGuestOnly();
+                    case "2" -> showAllGuests();
                     case "3" -> showGuestsNotCheckedIn();
                     case "4" -> showGuestsCheckedIn();
-                    case "5" -> checkInGuestToRoom(in);
-                    case "6" -> checkOutGuestFromRoom(in);
-                    case "7" -> showGuestServices(in);
-                    case "8" -> addServiceToGuest(in);
+                    case "5" -> checkInGuestToRoom();
+                    case "6" -> checkOutGuestFromRoom();
+                    case "7" -> showGuestServices();
+                    case "8" -> addServiceToGuest();
                     case "9" -> showGuestsCount();
                     case "0" -> back = true;
                     default -> consoleView.printInvalidOption();
                 }
             } catch (ValidationException e) {
-                consoleView.printError("Некорректные данные " + e.getMessage());
+                consoleView.printError("Некорректные данные: " + e.getMessage());
             } catch (GuestNotFoundException e) {
                 consoleView.printError(e.getMessage());
-            } catch (GuestAlreadyCheckedInException | GuestNotCheckedInException e) {
+            } catch (GuestNotCheckedInException e) {
                 consoleView.printError(e.getMessage());
-            } catch (RoomNotFoundException | RoomOccupiedException | RoomUnderMaintenanceException |
-                     RoomCapacityExceededException e) {
-                consoleView.printError("Ошибка с комнатой " + e.getMessage());
+            } catch (RoomNotFoundException e) {
+                consoleView.printError("Комната не найдена: " + e.getMessage());
             } catch (ServiceNotFoundException e) {
                 consoleView.printError(e.getMessage());
-            } catch (HotelException e) {
-                consoleView.printError("Ошибка системы " + e.getMessage());
             } catch (Exception e) {
-                consoleView.printError("Необработанное исключение в guestMenu: " + e.getClass().getName() + ": " + e.getMessage());
+                consoleView.printError("Ошибка: " + e.getMessage());
             }
         }
     }
@@ -169,7 +161,6 @@ public class ConsoleUI {
      * Предоставляет операции просмотра, добавления, управления состоянием комнат.
      */
     private void roomMenu() {
-
         boolean back = false;
 
         while (!back) {
@@ -185,7 +176,7 @@ public class ConsoleUI {
                     7 — Номера свободные к дате
                     8 — Полная стоимость проживания
                     9 — Количество свободных номеров
-                    10 - Изменить статус номера
+                    10 - Изменить статус обслуживания
                     0 — Назад
                     """);
 
@@ -194,27 +185,25 @@ public class ConsoleUI {
 
             try {
                 switch (input) {
-                    case "1" -> showAllRooms(in);
-                    case "2" -> showFreeRooms(in);
-                    case "3" -> addNewRoom(in);
-                    case "4" -> checkOutGuests(in);
-                    case "5" -> showRoomHistory(in);
-                    case "6" -> showRoomDetails(in);
-                    case "7" -> findRoomsFreeByDate(in);
-                    case "8" -> calculateFullRoomPrice(in);
+                    case "1" -> showAllRooms();
+                    case "2" -> showFreeRooms();
+                    case "3" -> addNewRoom();
+                    case "4" -> checkOutGuests();
+                    case "5" -> showRoomHistory();
+                    case "6" -> showRoomDetails();
+                    case "7" -> findRoomsFreeByDate();
+                    case "8" -> calculateFullRoomPrice();
                     case "9" -> consoleView.println("Свободных номеров: " + roomController.countFreeRooms());
-                    case "10" -> changeRoomStatus(in);
+                    case "10" -> changeRoomMaintenance();
                     case "0" -> back = true;
                     default -> consoleView.printInvalidOption();
                 }
             } catch (ValidationException e) {
-                consoleView.printError("Некорректные данные " + e.getMessage());
-            } catch (RoomNotFoundException | RoomAlreadyExistsException | RoomOccupiedException e) {
-                consoleView.printError("Ошибка с комнатой " + e.getMessage());
-            } catch (HotelException e) {
-                consoleView.printError("Ошибка системы " + e.getMessage());
+                consoleView.printError("Некорректные данные: " + e.getMessage());
+            } catch (RoomNotFoundException e) {
+                consoleView.printError("Комната не найдена: " + e.getMessage());
             } catch (Exception e) {
-                consoleView.printError("Необработанное исключение в guestMenu: " + e.getClass().getName() + ": " + e.getMessage());
+                consoleView.printError("Ошибка: " + e.getMessage());
             }
         }
     }
@@ -224,7 +213,6 @@ public class ConsoleUI {
      * Предоставляет операции просмотра и добавления услуг.
      */
     private void serviceMenu() {
-
         boolean back = false;
 
         while (!back) {
@@ -241,70 +229,98 @@ public class ConsoleUI {
 
             try {
                 switch (input) {
-                    case "1" -> showAllServices(in);
-                    case "2" -> addService(in);
+                    case "1" -> showAllServices();
+                    case "2" -> addService();
                     case "0" -> back = true;
                     default -> consoleView.printInvalidOption();
                 }
             } catch (ValidationException e) {
-                consoleView.printError("Некорректные данные " + e.getMessage());
-            } catch (ServiceNotFoundException | ServiceAlreadyExistsException e) {
-                consoleView.printError(e.getMessage());
-            } catch (HotelException e) {
-                consoleView.printError("Ошибка системы " + e.getMessage());
+                consoleView.printError("Некорректные данные: " + e.getMessage());
+            } catch (ServiceAlreadyExistsException e) {
+                consoleView.printError("Услуга уже существует: " + e.getMessage());
             } catch (Exception e) {
-                consoleView.printError("Необработанное исключение в guestMenu: " + e.getClass().getName() + ": " + e.getMessage());
+                consoleView.printError("Ошибка: " + e.getMessage());
             }
         }
     }
 
     /**
      * Отображает все комнаты с возможностью сортировки.
-     * @param scanner сканер для ввода пользователя
      */
-    private void showAllRooms(Scanner scanner) {
-        consoleView.print("Критерий сортировки (Цена, Вместимость, Звезды): ");
-        String sortInput = scanner.nextLine();
-        RoomSortOption option = RoomSortOption.fromDescription(sortInput);
+    private void showAllRooms() {
+        consoleView.print("Критерий сортировки (Номер, Цена, Звезды): ");
+        String sortInput = in.nextLine().trim();
+        RoomSortOption option = parseRoomSortOption(sortInput);
         List<Room> rooms = roomController.getAllRooms(option);
-        rooms.forEach(consoleView::println);
+        if (rooms.isEmpty()) {
+            consoleView.println("Нет зарегистрированных комнат.");
+        } else {
+            consoleView.println("Все комнаты отеля:");
+            rooms.forEach(room -> consoleView.println(
+                    "Номер: " + room.getNumber() +
+                            ", Вместимость: " + room.getCapacity() +
+                            ", Цена: " + room.getPrice() +
+                            ", Звезды: " + room.getStars() +
+                            ", Статус: " + (room.isOccupied() ? "Занята" : "Свободна") +
+                            (room.isUnderMaintenance() ? " (На обслуживании)" : "")
+            ));
+        }
     }
 
     /**
      * Отображает свободные комнаты с возможностью сортировки.
-     * @param scanner сканер для ввода пользователя
      */
-    private void showFreeRooms(Scanner scanner) {
-        consoleView.print("Критерий сортировки (Цена, Вместимость, Звезды): ");
-        String sortInput = scanner.nextLine();
-        RoomSortOption option = RoomSortOption.fromDescription(sortInput);
+    private void showFreeRooms() {
+        consoleView.print("Критерий сортировки (Номер, Цена, Звезды): ");
+        String sortInput = in.nextLine().trim();
+        RoomSortOption option = parseRoomSortOption(sortInput);
         List<Room> rooms = roomController.getFreeRooms(option);
-        rooms.forEach(consoleView::println);
+        if (rooms.isEmpty()) {
+            consoleView.println("Нет свободных номеров.");
+        } else {
+            consoleView.println("Свободные номера:");
+            rooms.forEach(room -> consoleView.println(
+                    "Номер: " + room.getNumber() +
+                            ", Вместимость: " + room.getCapacity() +
+                            ", Цена: " + room.getPrice() +
+                            ", Звезды: " + room.getStars()
+            ));
+        }
     }
 
     /**
      * Регистрирует нового гостя в системе.
-     * @param scanner сканер для ввода данных
      */
-    private void registerGuestOnly(Scanner scanner) {
+    private void registerGuestOnly() {
         consoleView.println("\n=== Регистрация нового гостя ===");
         consoleView.print("Имя: ");
-        String firstName = scanner.nextLine();
+        String firstName = in.nextLine().trim();
         consoleView.print("Фамилия: ");
-        String lastName = scanner.nextLine();
+        String lastName = in.nextLine().trim();
         consoleView.print("Возраст: ");
-        int age = Integer.parseInt(scanner.nextLine());
-        Guest guest = new Guest(0, age, firstName, lastName, null, new ArrayList<>());
-        guestController.registerGuest(guest);
-        consoleView.println("Гость зарегистрирован в системе: " + guest.getFullName() + " (ID: " + guest.getId() + ")");
+        String ageInput = in.nextLine().trim();
+
+        try {
+            int age = Integer.parseInt(ageInput);
+            Guest guest = new Guest();
+            guest.setFirstName(firstName);
+            guest.setSecondName(lastName);
+            guest.setAge(age);
+            guest.setRoomId(null);
+            guest.setServices(List.of());
+
+            guestController.registerGuest(guest);
+            consoleView.println("Гость зарегистрирован в системе: " + guest.getFullName() + " (ID: " + guest.getId() + ")");
+        } catch (NumberFormatException e) {
+            consoleView.printError("Некорректный возраст. Введите целое число.");
+        }
     }
 
     /**
      * Заселяет гостя в комнату.
      * Показывает список доступных гостей и обрабатывает процесс заселения.
-     * @param scanner сканер для ввода данных
      */
-    private void checkInGuestToRoom(Scanner scanner) {
+    private void checkInGuestToRoom() {
         consoleView.println("\n=== Заселение гостя в комнату ===");
 
         List<Guest> availableGuests = guestManager.getGuestsNotCheckedIn();
@@ -319,30 +335,40 @@ public class ConsoleUI {
         }
 
         consoleView.print("Выберите ID гостя для заселения: ");
-        int guestId = Integer.parseInt(scanner.nextLine());
+        String guestIdInput = in.nextLine().trim();
 
         consoleView.print("Номер комнаты: ");
-        int roomNumber = Integer.parseInt(scanner.nextLine());
+        String roomNumberInput = in.nextLine().trim();
 
         consoleView.print("Дата заселения (гггг-мм-дд, сегодня - пусто): ");
-        String checkInInput = scanner.nextLine();
-        LocalDate checkIn = checkInInput.isEmpty() ? LocalDate.now() : LocalDate.parse(checkInInput);
+        String checkInInput = in.nextLine().trim();
 
         consoleView.print("Дата выселения (гггг-мм-дд, +3 дня - пусто): ");
-        String checkOutInput = scanner.nextLine();
-        LocalDate checkOut = checkOutInput.isEmpty() ? checkIn.plusDays(3) : LocalDate.parse(checkOutInput);
+        String checkOutInput = in.nextLine().trim();
 
-        boolean success = guestController.checkInGuest(guestId, roomNumber, checkIn, checkOut);
-        if (success) consoleView.println("Гость успешно заселен в комнату " + roomNumber);
-        else consoleView.println("Ошибка заселения");
+        try {
+            long guestId = Long.parseLong(guestIdInput);
+            int roomNumber = Integer.parseInt(roomNumberInput);
+
+            LocalDate checkIn = checkInInput.isEmpty() ? LocalDate.now() : LocalDate.parse(checkInInput);
+            LocalDate checkOut = checkOutInput.isEmpty() ? checkIn.plusDays(3) : LocalDate.parse(checkOutInput);
+
+            boolean success = guestController.checkInGuest(guestId, roomNumber, checkIn, checkOut);
+            if (success) {
+                consoleView.println("Гость успешно заселен в комнату " + roomNumber);
+            } else {
+                consoleView.println("Ошибка заселения. Проверьте номер комнаты и статус гостя.");
+            }
+        } catch (NumberFormatException e) {
+            consoleView.printError("Некорректный ввод ID гостя или номера комнаты.");
+        }
     }
 
     /**
      * Выселяет гостя из комнаты.
      * Показывает список заселенных гостей и обрабатывает процесс выселения.
-     * @param scanner сканер для ввода данных
      */
-    private void checkOutGuestFromRoom(Scanner scanner) {
+    private void checkOutGuestFromRoom() {
         consoleView.println("\n=== Выселение гостя из комнаты ===");
 
         List<Guest> checkedInGuests = guestManager.getGuestsCheckedIn();
@@ -354,13 +380,23 @@ public class ConsoleUI {
         consoleView.println("Заселенные гости:");
         for (Guest guest : checkedInGuests) {
             consoleView.println("ID: " + guest.getId() + " - " + guest.getFullName() +
-                    ", комната: " + guest.getGuestRoom().getNumber());
+                    ", комната: " + guest.getRoom().getNumber());
         }
 
         consoleView.print("Выберите ID гостя для выселения: ");
-        int guestId = Integer.parseInt(scanner.nextLine());
-        guestController.checkOutGuest(guestId);
-        consoleView.println("Гость успешно выселен из комнаты.");
+        String guestIdInput = in.nextLine().trim();
+
+        try {
+            long guestId = Long.parseLong(guestIdInput);
+            guestController.checkOutGuest(guestId);
+            consoleView.println("Гость успешно выселен из комнаты.");
+        } catch (NumberFormatException e) {
+            consoleView.printError("Некорректный ввод ID гостя.");
+        } catch (GuestNotFoundException e) {
+            consoleView.printError("Гость с указанным ID не найден.");
+        } catch (GuestNotCheckedInException e) {
+            consoleView.printError("Гость не заселен в комнату.");
+        }
     }
 
     /**
@@ -393,179 +429,381 @@ public class ConsoleUI {
         } else {
             consoleView.println("Заселенные гости:");
             guests.forEach(g -> consoleView.println(" - " + g.getFullName() +
-                    ", комната: " + g.getGuestRoom().getNumber()));
+                    ", комната: " + g.getRoom().getNumber()));
         }
     }
 
     /**
      * Отображает всех гостей с возможностью сортировки по различным критериям.
      * Пользователь выбирает критерий сортировки из доступных опций.
-     * @param scanner сканер для чтения пользовательского ввода
      */
-    private void showAllGuests(Scanner scanner) {
-        consoleView.print("Критерий сортировки (Алфавит, Дата освобождения номера): ");
-        String sortInput = scanner.nextLine();
-        GuestSortOption option = GuestSortOption.fromDescription(sortInput);
+    private void showAllGuests() {
+        consoleView.print("Критерий сортировки (Имя, Возраст, Номер комнаты): ");
+        String sortInput = in.nextLine().trim();
+        GuestSortOption option = parseGuestSortOption(sortInput);
         List<Guest> guests = guestController.getSortedGuests(option);
-        guests.forEach(consoleView::println);
+
+        if (guests.isEmpty()) {
+            consoleView.println("Нет зарегистрированных гостей.");
+        } else {
+            consoleView.println("Все гости:");
+            guests.forEach(guest -> {
+                String roomInfo = (guest.getRoom() != null)
+                        ? " (Комната: " + guest.getRoom().getNumber() + ")"
+                        : " (Не заселен)";
+                consoleView.println("ID: " + guest.getId() +
+                        " - " + guest.getFullName() +
+                        ", возраст: " + guest.getAge() +
+                        roomInfo);
+            });
+        }
     }
 
     /**
      * Добавляет новую услугу в систему.
      * Запрашивает у пользователя название, описание и цену услуги.
      * Создает услугу с текущей датой и сохраняет через контроллер.
-     * @param scanner сканер для чтения пользовательского ввода
      */
-    private void addService(Scanner scanner) {
+    private void addService() {
+        consoleView.println("\n=== Добавление новой услуги ===");
         consoleView.print("Название услуги: ");
-        String name = scanner.nextLine();
+        String name = in.nextLine().trim();
         consoleView.print("Описание: ");
-        String description = scanner.nextLine();
+        String description = in.nextLine().trim();
         consoleView.print("Цена: ");
-        double price = Double.parseDouble(scanner.nextLine());
-        Service service = new Service(0, name, description, price, LocalDate.now());
-        serviceController.addService(service);
-        consoleView.println("Услуга добавлена: " + service);
+        String priceInput = in.nextLine().trim();
+
+        try {
+            double price = Double.parseDouble(priceInput);
+            Service service = new Service();
+            service.setName(name);
+            service.setDescription(description);
+            service.setPrice(price);
+            service.setDate(LocalDate.now());
+
+            Service addedService = serviceController.addService(service);
+            consoleView.println("Услуга добавлена: " + addedService.getName() + " (ID: " + addedService.getId() + ")");
+        } catch (NumberFormatException e) {
+            consoleView.printError("Некорректная цена. Введите число.");
+        }
     }
 
     /**
      * Отображает все услуги с возможностью сортировки по цене или названию.
      * Пользователь выбирает критерий сортировки из доступных опций.
-     * @param scanner сканер для чтения пользовательского ввода
      */
-    private void showAllServices(Scanner scanner) {
-        consoleView.print("Критерий сортировки (Цена, Название): ");
-        String sortInput = scanner.nextLine();
-        ServiceSortOption option = ServiceSortOption.fromDescription(sortInput);
+    private void showAllServices() {
+        consoleView.print("Критерий сортировки (Название, Цена): ");
+        String sortInput = in.nextLine().trim();
+        ServiceSortOption option = parseServiceSortOption(sortInput);
         List<Service> services = serviceController.getServices(option);
-        services.forEach(consoleView::println);
+
+        if (services.isEmpty()) {
+            consoleView.println("Нет зарегистрированных услуг.");
+        } else {
+            consoleView.println("Все услуги:");
+            services.forEach(service -> consoleView.println(
+                    "ID: " + service.getId() +
+                            ", Название: " + service.getName() +
+                            ", Описание: " + service.getDescription() +
+                            ", Цена: " + service.getPrice() +
+                            ", Дата: " + service.getDate()
+            ));
+        }
     }
 
     /**
      * Находит и отображает номера, которые будут свободны к указанной дате.
      * Включает уже свободные номера и те, которые освободятся к заданной дате.
-     * @param scanner сканер для чтения пользовательского ввода
      */
-    private void findRoomsFreeByDate(Scanner scanner) {
+    private void findRoomsFreeByDate() {
         consoleView.print("Введите дату (yyyy-mm-dd): ");
-        LocalDate date = LocalDate.parse(scanner.nextLine());
-        List<Room> rooms = roomController.findRoomsThatWillBeFree(date);
-        consoleView.println("Номера, которые будут свободны к " + date + ":");
-        rooms.forEach(consoleView::println);
+        String dateInput = in.nextLine().trim();
+
+        try {
+            LocalDate date = LocalDate.parse(dateInput);
+            List<Room> rooms = roomController.findRoomsThatWillBeFree(date);
+
+            if (rooms.isEmpty()) {
+                consoleView.println("Нет номеров, которые будут свободны к " + date);
+            } else {
+                consoleView.println("Номера, которые будут свободны к " + date + ":");
+                rooms.forEach(room -> consoleView.println(
+                        "Номер: " + room.getNumber() +
+                                ", Вместимость: " + room.getCapacity() +
+                                ", Цена: " + room.getPrice() +
+                                ", Статус: " + (room.isOccupied() ?
+                                "Освободится " + room.getCheckOutDate() : "Свободна")
+                ));
+            }
+        } catch (Exception e) {
+            consoleView.printError("Некорректный формат даты. Используйте формат гггг-мм-дд.");
+        }
     }
 
     /**
      * Рассчитывает и отображает полную стоимость проживания в номере.
-     * @param scanner сканер для чтения пользовательского ввода
      */
-    private void calculateFullRoomPrice(Scanner scanner) {
+    private void calculateFullRoomPrice() {
         consoleView.print("Введите номер комнаты: ");
-        int roomNumber = Integer.parseInt(scanner.nextLine());
-        Optional<Double> price = roomController.getFullRoomPrice(roomNumber);
-        price.ifPresentOrElse(
-                p -> consoleView.println("Полная оплата за номер: " + p),
-                () -> consoleView.println("Номер не найден")
-        );
+        String roomNumberInput = in.nextLine().trim();
+
+        try {
+            int roomNumber = Integer.parseInt(roomNumberInput);
+            Optional<Double> price = roomController.getFullRoomPrice(roomNumber);
+
+            if (price.isPresent()) {
+                consoleView.println("Полная стоимость проживания в номере " + roomNumber + ": " + price.get());
+            } else {
+                consoleView.println("Номер " + roomNumber + " не найден.");
+            }
+        } catch (NumberFormatException e) {
+            consoleView.printError("Некорректный номер комнаты. Введите целое число.");
+        }
     }
 
-    private void changeRoomStatus(Scanner scanner) {
+    /**
+     * Изменяет статус обслуживания комнаты.
+     */
+    private void changeRoomMaintenance() {
         consoleView.print("Введите номер комнаты: ");
-        int roomNumber = Integer.parseInt(scanner.nextLine());
-        consoleView.print("Введите статус обслуживания (true/false): ");
-        boolean maintenance = Boolean.parseBoolean(scanner.nextLine());
-        roomController.setRoomMaintenance(roomNumber, maintenance);
+        String roomNumberInput = in.nextLine().trim();
+
+        consoleView.print("Установить статус обслуживания (true/false): ");
+        String maintenanceInput = in.nextLine().trim();
+
+        try {
+            int roomNumber = Integer.parseInt(roomNumberInput);
+            boolean maintenance = Boolean.parseBoolean(maintenanceInput);
+
+            roomController.setRoomMaintenance(roomNumber, maintenance);
+            consoleView.println("Статус обслуживания номера " + roomNumber +
+                    " изменен на: " + (maintenance ? "требует обслуживания" : "готов к заселению"));
+        } catch (NumberFormatException e) {
+            consoleView.printError("Некорректный номер комнаты. Введите целое число.");
+        }
     }
 
     /**
      * Отображает историю проживания в указанной комнате.
-     * @param scanner сканер для чтения пользовательского ввода
      */
-    private void showRoomHistory(Scanner scanner) {
+    private void showRoomHistory() {
         consoleView.print("Введите номер комнаты: ");
-        int roomNumber = Integer.parseInt(scanner.nextLine());
-        List<String> history = roomController.getRoomHistory(roomNumber);
-        history.forEach(consoleView::println);
+        String roomNumberInput = in.nextLine().trim();
+
+        try {
+            int roomNumber = Integer.parseInt(roomNumberInput);
+            List<String> history = roomController.getRoomHistory(roomNumber);
+
+            if (history.isEmpty()) {
+                consoleView.println("История посещений для номера " + roomNumber + " отсутствует.");
+            } else {
+                consoleView.println("История посещений номера " + roomNumber + ":");
+                for (int i = 0; i < history.size(); i++) {
+                    consoleView.println((i + 1) + ". " + history.get(i));
+                }
+            }
+        } catch (NumberFormatException e) {
+            consoleView.printError("Некорректный номер комнаты. Введите целое число.");
+        }
     }
 
     /**
      * Отображает услуги конкретного гостя с возможностью сортировки.
      * Сначала находит гостя по имени, затем показывает его услуги.
-     * @param scanner сканер для чтения пользовательского ввода
      */
-    private void showGuestServices(Scanner scanner) {
+    private void showGuestServices() {
         consoleView.print("Введите имя и фамилию гостя: ");
-        String guestName = scanner.nextLine();
-        Guest guest = guestController.findGuestByFullName(guestName);
+        String guestName = in.nextLine().trim();
 
-        consoleView.print("Критерий сортировки услуг (Цена, Название): ");
-        String sortInput = scanner.nextLine();
-        ServiceSortOption option = ServiceSortOption.fromDescription(sortInput);
-        List<Service> services = guestController.getGuestServices(guest, option);
-        services.forEach(consoleView::println);
+        try {
+            Guest guest = guestController.findGuestByFullName(guestName);
+            if (guest == null) {
+                consoleView.println("Гость с именем '" + guestName + "' не найден.");
+                return;
+            }
+
+            consoleView.print("Критерий сортировки услуг (Название, Цена): ");
+            String sortInput = in.nextLine().trim();
+            ServiceSortOption option = parseServiceSortOption(sortInput);
+
+            List<Service> services = guestController.getGuestServices(guest, option);
+
+            if (services.isEmpty()) {
+                consoleView.println("У гостя " + guest.getFullName() + " нет услуг.");
+            } else {
+                consoleView.println("Услуги гостя " + guest.getFullName() + ":");
+                services.forEach(service -> consoleView.println(
+                        "- " + service.getName() +
+                                " (Цена: " + service.getPrice() +
+                                ", Дата: " + service.getDate() + ")"
+                ));
+            }
+        } catch (Exception e) {
+            consoleView.printError("Ошибка при получении услуг гостя: " + e.getMessage());
+        }
     }
 
     /**
      * Отображает подробную информацию о конкретной комнате.
-     * @param scanner сканер для чтения пользовательского ввода
      */
-    private void showRoomDetails(Scanner scanner) {
+    private void showRoomDetails() {
         consoleView.print("Введите номер комнаты: ");
-        int roomNumber = Integer.parseInt(scanner.nextLine());
-        Optional<Room> room = roomController.getFullRoomInfo(roomNumber);
-        room.ifPresentOrElse(consoleView::println, () -> consoleView.println("Номер не найден"));
+        String roomNumberInput = in.nextLine().trim();
+
+        try {
+            int roomNumber = Integer.parseInt(roomNumberInput);
+            Optional<Room> room = roomController.getFullRoomInfo(roomNumber);
+
+            if (room.isPresent()) {
+                Room r = room.get();
+                consoleView.println("Детальная информация о номере " + r.getNumber() + ":");
+                consoleView.println("Вместимость: " + r.getCapacity());
+                consoleView.println("Цена за ночь: " + r.getPrice());
+                consoleView.println("Звезды: " + r.getStars());
+                consoleView.println("Статус: " + (r.isOccupied() ? "Занят" : "Свободен"));
+                consoleView.println("Техническое обслуживание: " + (r.isUnderMaintenance() ? "Требуется" : "Не требуется"));
+
+                if (r.isOccupied() && r.getCheckInDate() != null && r.getCheckOutDate() != null) {
+                    consoleView.println("Дата заселения: " + r.getCheckInDate());
+                    consoleView.println("Дата выселения: " + r.getCheckOutDate());
+                    consoleView.println("Гостей в номере: " + r.getGuests().size());
+                }
+            } else {
+                consoleView.println("Номер " + roomNumber + " не найден.");
+            }
+        } catch (NumberFormatException e) {
+            consoleView.printError("Некорректный номер комнаты. Введите целое число.");
+        }
     }
 
     /**
      * Выселяет всех гостей из указанной комнаты.
-     * @param scanner сканер для чтения пользовательского ввода
      */
-    private void checkOutGuests(Scanner scanner) {
+    private void checkOutGuests() {
         consoleView.print("Введите номер комнаты для выселения: ");
-        int roomNumber = Integer.parseInt(scanner.nextLine());
-        boolean success = roomManager.checkOut(roomNumber);
-        if (success) consoleView.println("Гости из комнаты " + roomNumber + " успешно выселены.");
-        else consoleView.println("Ошибка: комната не найдена или пуста.");
+        String roomNumberInput = in.nextLine().trim();
+
+        try {
+            int roomNumber = Integer.parseInt(roomNumberInput);
+            boolean success = roomManager.checkOut(roomNumber);
+
+            if (success) {
+                consoleView.println("Все гости из комнаты " + roomNumber + " успешно выселены.");
+            } else {
+                consoleView.println("Ошибка: комната не найдена, пуста или уже свободна.");
+            }
+        } catch (NumberFormatException e) {
+            consoleView.printError("Некорректный номер комнаты. Введите целое число.");
+        }
     }
 
     /**
      * Добавляет новый номер в систему отеля.
-     * @param scanner сканер для чтения пользовательского ввода
      */
-    private void addNewRoom(Scanner scanner) {
+    private void addNewRoom() {
+        consoleView.println("\n=== Добавление нового номера ===");
         consoleView.print("Номер комнаты: ");
-        int number = Integer.parseInt(scanner.nextLine());
+        String numberInput = in.nextLine().trim();
+
         consoleView.print("Вместимость: ");
-        int capacity = Integer.parseInt(scanner.nextLine());
-        consoleView.print("Звезды: ");
-        int stars = Integer.parseInt(scanner.nextLine());
-        consoleView.print("Цена: ");
-        double price = Double.parseDouble(scanner.nextLine());
-        Room room = new Room(0, number, capacity, price, stars);
-        boolean added = roomController.addRoom(room);
-        if (added) consoleView.println("Номер добавлен успешно");
-        else consoleView.println("Номер с таким номером уже существует");
+        String capacityInput = in.nextLine().trim();
+
+        consoleView.print("Звезды (1-5): ");
+        String starsInput = in.nextLine().trim();
+
+        consoleView.print("Цена за ночь: ");
+        String priceInput = in.nextLine().trim();
+
+        try {
+            int number = Integer.parseInt(numberInput);
+            int capacity = Integer.parseInt(capacityInput);
+            int stars = Integer.parseInt(starsInput);
+            double price = Double.parseDouble(priceInput);
+
+            Room room = new Room();
+            room.setNumber(number);
+            room.setCapacity(capacity);
+            room.setStars(stars);
+            room.setPrice(price);
+
+            boolean added = roomController.addRoom(room);
+
+            if (added) {
+                consoleView.println("Номер " + number + " успешно добавлен в систему.");
+            } else {
+                consoleView.println("Ошибка: номер с таким номером уже существует.");
+            }
+        } catch (NumberFormatException e) {
+            consoleView.printError("Некорректный ввод. Все числовые поля должны содержать числа.");
+        } catch (ValidationException e) {
+            consoleView.printError("Ошибка валидации: " + e.getMessage());
+        }
     }
 
     /**
      * Добавляет услугу конкретному гостю.
      * Показывает список доступных услуг и позволяет выбрать одну для добавления.
      * Проверяет существование гостя и услуги перед выполнением операции.
-     * @param scanner сканер для чтения пользовательского ввода
      */
-    private void addServiceToGuest(Scanner scanner) {
+    private void addServiceToGuest() {
         consoleView.print("Введите имя и фамилию гостя: ");
-        String guestName = scanner.nextLine();
+        String guestName = in.nextLine().trim();
 
-        List<Service> services = serviceManager.getSortedServices(ServiceSortOption.NAME);
         consoleView.println("Доступные услуги:");
+        List<Service> services = serviceManager.getSortedServices(ServiceSortOption.BY_NAME);
+        if (services.isEmpty()) {
+            consoleView.println("Нет доступных услуг.");
+            return;
+        }
+
         services.forEach(s -> consoleView.println("- " + s.getName() + " (Цена: " + s.getPrice() + ")"));
 
         consoleView.print("Введите название услуги: ");
-        String serviceName = scanner.nextLine();
+        String serviceName = in.nextLine().trim();
 
-        guestController.addServiceToGuestByName(guestName, serviceName);
-        consoleView.println("Услуга добавлена гостю.");
+        try {
+            guestController.addServiceToGuestByName(guestName, serviceName);
+            consoleView.println("Услуга '" + serviceName + "' успешно добавлена гостю '" + guestName + "'.");
+        } catch (ServiceNotFoundException e) {
+            consoleView.printError("Услуга '" + serviceName + "' не найдена.");
+        } catch (GuestNotFoundException e) {
+            consoleView.printError("Гость '" + guestName + "' не найден.");
+        }
     }
 
+    /**
+     * Преобразует строку в опцию сортировки для комнат.
+     */
+    private RoomSortOption parseRoomSortOption(String input) {
+        return switch (input.toLowerCase()) {
+            case "номер", "number" -> RoomSortOption.BY_NUMBER;
+            case "цена", "price" -> RoomSortOption.BY_PRICE;
+            case "звезды", "stars" -> RoomSortOption.BY_STARS;
+            default -> RoomSortOption.BY_NUMBER;
+        };
+    }
 
+    /**
+     * Преобразует строку в опцию сортировки для гостей.
+     */
+    private GuestSortOption parseGuestSortOption(String input) {
+        return switch (input.toLowerCase()) {
+            case "имя", "name" -> GuestSortOption.BY_NAME;
+            case "возраст", "age" -> GuestSortOption.BY_AGE;
+            case "номер комнаты", "room number" -> GuestSortOption.BY_ROOM_NUMBER;
+            default -> GuestSortOption.BY_NAME;
+        };
+    }
+
+    /**
+     * Преобразует строку в опцию сортировки для услуг.
+     */
+    private ServiceSortOption parseServiceSortOption(String input) {
+        return switch (input.toLowerCase()) {
+            case "название", "name" -> ServiceSortOption.BY_NAME;
+            case "цена", "price" -> ServiceSortOption.BY_PRICE;
+            default -> ServiceSortOption.BY_NAME;
+        };
+    }
 }

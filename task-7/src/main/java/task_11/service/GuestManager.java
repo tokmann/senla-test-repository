@@ -2,7 +2,11 @@ package task_11.service;
 
 import di.Component;
 import di.Inject;
+import task_11.db.TransactionManager;
+import task_11.db.interfaces.GuestServiceRepository;
+import task_11.db.interfaces.RoomRepository;
 import task_11.exceptions.ValidationException;
+import task_11.exceptions.guests.GuestAlreadyCheckedInException;
 import task_11.exceptions.guests.GuestException;
 import task_11.exceptions.guests.GuestNotCheckedInException;
 import task_11.exceptions.guests.GuestNotFoundException;
@@ -10,7 +14,7 @@ import task_11.exceptions.services.ServiceNotFoundException;
 import task_11.model.Guest;
 import task_11.model.Room;
 import task_11.model.Service;
-import task_11.repository.interfaces.GuestRepository;
+import task_11.db.interfaces.GuestRepository;
 import task_11.service.interfaces.IGuestManager;
 import task_11.service.interfaces.IRoomManager;
 import task_11.service.interfaces.IServiceManager;
@@ -22,256 +26,255 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-/**
- * Сервисный слой для управления гостями.
- * Отвечает за операции CRUD над сущностью {@link Guest},
- * а также за бизнес-логику, связанную с гостями:
- * сортировка, поиск, добавление услуг и т.д.
- */
 @Component
 public class GuestManager implements IGuestManager {
 
     @Inject
-    private GuestRepository repository;
+    private GuestRepository guestRepository;
 
-    /**
-     * Добавляет нового гостя в систему.
-     * @param guest гость для добавления
-     */
+    @Inject
+    private RoomRepository roomRepository;
+
+    @Inject
+    private GuestServiceRepository guestServiceRepository;
+
+    @Inject
+    private IRoomManager roomManager;
+
+    @Inject
+    private IServiceManager serviceManager;
+
+    @Inject
+    private TransactionManager transactionManager;
+
     @Override
     public void addGuest(Guest guest) {
-        repository.save(guest);
+        transactionManager.beginTransaction();
+        try {
+            guestRepository.save(guest);
+            transactionManager.commitTransaction();
+        } catch (Exception e) {
+            transactionManager.rollbackTransaction();
+            throw e;
+        }
     }
 
-    /**
-     * Удаляет гостя из системы.
-     * Гость может быть удален только если он не заселен в комнату.
-     * @param guest гость для удаления
-     */
     @Override
     public void removeGuest(Guest guest) {
         if (guest == null) {
-            throw new ValidationException("Гость не может быть null");
+            throw new ValidationException("Guest cannot be null");
         }
 
-        if (guest.getGuestRoom() != null) {
-            throw new GuestException("Невозможно удалить гостя " + guest.getFullName() +
-                    ", так как он заселен в комнату " + guest.getGuestRoom().getNumber());
-        }
+        transactionManager.beginTransaction();
+        try {
+            Guest loadedGuest = guestRepository.findById(guest.getId())
+                    .orElseThrow(() -> new GuestNotFoundException(guest.getId()));
 
-        repository.delete(guest);
+            if (loadedGuest.getRoom() != null) {
+                throw new GuestException("Cannot delete checked-in guest " + loadedGuest.getFullName() +
+                        " from room " + loadedGuest.getRoom().getNumber());
+            }
+
+            guestRepository.delete(loadedGuest);
+            transactionManager.commitTransaction();
+        } catch (Exception e) {
+            transactionManager.rollbackTransaction();
+            throw e;
+        }
     }
 
-    /**
-     * Возвращает всех гостей системы.
-     * @return список всех гостей
-     */
     @Override
     public List<Guest> getAllGuests() {
-        return repository.findAll();
+        transactionManager.beginTransaction();
+        try {
+            List<Guest> guests = guestRepository.findAll();
+            guests.forEach(guest -> {
+                guestRepository.loadRoomForGuest(guest);
+                guest.setServices(guestServiceRepository.findServicesByGuestId(guest.getId()));
+            });
+            transactionManager.commitTransaction();
+            return guests;
+        } catch (Exception e) {
+            transactionManager.rollbackTransaction();
+            throw e;
+        }
     }
 
-    /**
-     * Возвращает гостей, которые не заселены в комнаты.
-     * @return список незаселенных гостей
-     */
     @Override
     public List<Guest> getGuestsNotCheckedIn() {
-        return repository.findAll().stream()
-                .filter(g -> g.getGuestRoom() == null)
+        return getAllGuests().stream()
+                .filter(guest -> guest.getRoom() == null)
                 .collect(Collectors.toList());
     }
 
-
-    /**
-     * Возвращает гостей, заселенных в комнаты.
-     * @return список заселенных гостей
-     */
     @Override
     public List<Guest> getGuestsCheckedIn() {
-        return repository.findAll().stream()
-                .filter(g -> g.getGuestRoom() != null)
+        return getAllGuests().stream()
+                .filter(guest -> guest.getRoom() != null)
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Подсчитывает общее количество гостей в системе.
-     * @return количество гостей
-     */
     @Override
     public int countGuests() {
-        return repository.findAll().size();
+        transactionManager.beginTransaction();
+        try {
+            int count = guestRepository.count();
+            transactionManager.commitTransaction();
+            return count;
+        } catch (Exception e) {
+            transactionManager.rollbackTransaction();
+            throw e;
+        }
     }
 
-    /**
-     * Возвращает отсортированный список услуг конкретного гостя.
-     * @param guest гость, чьи услуги нужно отсортировать
-     * @param option критерий сортировки услуг
-     * @return отсортированный список услуг гостя
-     */
     @Override
     public List<Service> getSortedGuestServices(Guest guest, ServiceSortOption option) {
         if (guest == null) {
-            throw new ValidationException("Гость не может быть null");
+            throw new ValidationException("Guest cannot be null");
         }
 
-        return guest.getGuestServices()
-                .stream()
-                .sorted(option.getComparator())
-                .collect(Collectors.toList());
+        transactionManager.beginTransaction();
+        try {
+            List<Service> services = guestServiceRepository.findServicesByGuestId(guest.getId());
+            transactionManager.commitTransaction();
+            return services.stream()
+                    .sorted(option.getComparator())
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            transactionManager.rollbackTransaction();
+            throw e;
+        }
     }
 
-    /**
-     * Возвращает список всех гостей, отсортированный по указанному критерию.
-     * @param option критерий сортировки гостей
-     * @return отсортированный список гостей
-     */
     @Override
     public List<Guest> getSortedGuests(GuestSortOption option) {
-        return repository.findAll().stream()
+        return getAllGuests().stream()
                 .sorted(option.getComparator())
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Находит гостя по идентификатору.
-     * @param id идентификатор гостя
-     * @return Optional с найденным гостем или empty если не найден
-     */
     @Override
     public Optional<Guest> getGuestById(long id) {
-        return repository.findById(id);
+        transactionManager.beginTransaction();
+        try {
+            Optional<Guest> guestOpt = guestRepository.findById(id);
+            guestOpt.ifPresent(guest -> {
+                guestRepository.loadRoomForGuest(guest);
+                guest.setServices(guestServiceRepository.findServicesByGuestId(guest.getId()));
+            });
+            transactionManager.commitTransaction();
+            return guestOpt;
+        } catch (Exception e) {
+            transactionManager.rollbackTransaction();
+            throw e;
+        }
     }
 
-    /**
-     * Ищет гостя по полному имени (без учёта регистра).
-     * @param fullName полное имя гостя в формате "Имя Фамилия"
-     * @return найденный гость или null если не найден
-     */
     @Override
     public Guest findGuestByFullName(String fullName) {
         if (fullName == null || fullName.trim().isEmpty()) {
-            throw new ValidationException("Полное имя гостя не может быть пустым");
+            throw new ValidationException("Guest full name cannot be empty");
         }
 
-        return repository.findAll()
-                .stream()
-                .filter(g -> g.getFullName().equalsIgnoreCase(fullName.trim()))
+        String normalizedFullName = fullName.trim().toLowerCase();
+        return getAllGuests().stream()
+                .filter(guest -> guest.getFullName().toLowerCase().equals(normalizedFullName))
                 .findFirst()
                 .orElse(null);
     }
 
-    /**
-     * Добавляет услугу конкретному гостю, если она ещё не добавлена.
-     * Предотвращает дублирование услуг у одного гостя.
-     * @param guest гость, которому добавляется услуга
-     * @param service услуга для добавления
-     */
     @Override
-    public void addServiceToGuest(Guest guest, Service service) {
-        if (guest == null) {
-            throw new ValidationException("Гость не может быть null");
-        }
-        if (service == null) {
-            throw new ValidationException("Услуга не может быть null");
-        }
-
-        List<Service> services = guest.getGuestServices();
-        if (!services.contains(service)) {
-            services.add(service);
+    public void addServiceToGuest(long guestId, long serviceId) {
+        transactionManager.beginTransaction();
+        try {
+            guestServiceRepository.addServiceToGuest(guestId, serviceId);
+            transactionManager.commitTransaction();
+        } catch (Exception e) {
+            transactionManager.rollbackTransaction();
+            throw e;
         }
     }
 
-    /**
-     * Заселяет существующего гостя в комнату на указанный период.
-     * Проверяет, что гость существует и не заселен в другую комнату.
-     * @param guestId идентификатор гостя
-     * @param roomNumber номер комнаты для заселения
-     * @param checkIn дата заселения
-     * @param checkOut дата выселения
-     * @param roomManager менеджер комнат для выполнения операции заселения
-     * @return true если заселение успешно, false в случае ошибки
-     */
     @Override
-    public boolean checkInGuest(long guestId, int roomNumber, LocalDate checkIn,
-                                LocalDate checkOut, IRoomManager roomManager) {
+    public boolean checkInGuest(long guestId, int roomNumber, LocalDate checkIn, LocalDate checkOut) {
         if (checkIn == null || checkOut == null) {
-            throw new ValidationException("Даты заселения и выселения не могут быть null");
+            throw new ValidationException("Check-in and check-out dates cannot be null");
         }
-        if (checkOut.isBefore(checkIn) || checkOut.isEqual(checkIn)) {
-            throw new ValidationException("Дата выселения должна быть после даты заселения");
-        }
-
-        Optional<Guest> optionalGuest = getGuestById(guestId);
-        if (optionalGuest.isEmpty()) {
-            return false;
+        if (!checkOut.isAfter(checkIn)) {
+            throw new ValidationException("Check-out date must be after check-in date");
         }
 
-        Guest guest = optionalGuest.get();
-        if (guest.getGuestRoom() != null) {
-            return false;
-        }
+        transactionManager.beginTransaction();
+        try {
+            Guest guest = guestRepository.findById(guestId)
+                    .orElseThrow(() -> new GuestNotFoundException(guestId));
 
-        return roomManager.checkIn(roomNumber, List.of(guest), checkIn, checkOut);
+            if (guest.getRoom() != null) {
+                throw new GuestAlreadyCheckedInException(guestId);
+            }
+
+            boolean result = roomManager.checkIn(roomNumber, List.of(guest), checkIn, checkOut);
+
+            if (result) {
+                transactionManager.commitTransaction();
+                return true;
+            } else {
+                transactionManager.rollbackTransaction();
+                return false;
+            }
+        } catch (Exception e) {
+            transactionManager.rollbackTransaction();
+            throw e;
+        }
     }
 
-    /**
-     * Выселяет гостя из комнаты.
-     * Гость остается в системе, но теряет связь с комнатой.
-     * Если комната становится пустой, она помечается как свободная.
-     * @param guestId идентификатор гостя
-     */
     @Override
     public void checkOutGuest(long guestId) {
-        Guest guest = getGuestById(guestId)
-                .orElseThrow(() -> new GuestNotFoundException(guestId));
+        transactionManager.beginTransaction();
+        try {
+            Guest guest = guestRepository.findById(guestId)
+                    .orElseThrow(() -> new GuestNotFoundException(guestId));
 
-        Room room = guest.getGuestRoom();
-        if (room == null) {
-            throw new GuestNotCheckedInException(guestId);
-        }
+            Room room = guest.getRoom();
+            if (room == null) {
+                throw new GuestNotCheckedInException(guestId);
+            }
 
-        room.getGuests().remove(guest);
-        guest.setGuestRoom(null);
-        if (room.getGuests().isEmpty()) {
-            room.checkOut();
+            roomManager.checkOut(room.getNumber());
+            guest.setRoom(null);
+            transactionManager.commitTransaction();
+        } catch (Exception e) {
+            transactionManager.rollbackTransaction();
+            throw e;
         }
     }
 
-    /**
-     * Добавляет услугу гостю по имени гостя и названию услуги.
-     * Находит гостя по полному имени и услугу по названию.
-     * @param guestFullName полное имя гостя
-     * @param serviceName название услуги
-     * @param serviceManager менеджер услуг для поиска услуги
-     */
     @Override
-    public void addServiceToGuestByName(String guestFullName, String serviceName, IServiceManager serviceManager) {
+    public void addServiceToGuestByName(String guestFullName, String serviceName) {
         if (guestFullName == null || guestFullName.trim().isEmpty()) {
-            throw new ValidationException("Полное имя гостя не может быть пустым");
+            throw new ValidationException("Guest full name cannot be empty");
         }
         if (serviceName == null || serviceName.trim().isEmpty()) {
-            throw new ValidationException("Название услуги не может быть пустым");
+            throw new ValidationException("Service name cannot be empty");
         }
 
-        Guest guest = findGuestByFullName(guestFullName);
-        if (guest == null) {
-            throw new GuestNotFoundException(guestFullName);
-        }
+        transactionManager.beginTransaction();
+        try {
+            Guest guest = findGuestByFullName(guestFullName);
+            if (guest == null) {
+                throw new GuestNotFoundException(guestFullName);
+            }
 
-        Service service = serviceManager.findByName(serviceName);
-        if (service == null) {
-            throw new ServiceNotFoundException(serviceName);
-        }
+            Service service = serviceManager.findByName(serviceName);
+            if (service == null) {
+                throw new ServiceNotFoundException(serviceName);
+            }
 
-        addServiceToGuest(guest, service);
+            addServiceToGuest(guest.getId(), service.getId());
+            transactionManager.commitTransaction();
+        } catch (Exception e) {
+            transactionManager.rollbackTransaction();
+            throw e;
+        }
     }
-
-    /**
-     * Метод для синхронизации Id после десериализации
-     * */
-    public void syncIdGen() {
-        repository.syncIdGen();
-    }
-
 }

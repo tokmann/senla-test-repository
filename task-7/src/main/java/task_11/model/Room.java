@@ -198,7 +198,7 @@ public class Room {
     public void checkOut() {
         this.isOccupied = false;
         for (Guest guest : guests) {
-            guest.setRoomId(0); // Или null, но long
+            guest.setRoomId(null);
             guest.setRoom(null);
         }
         this.guests.clear();

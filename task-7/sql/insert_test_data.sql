@@ -1,12 +1,12 @@
 -- Тестовые комнаты
-INSERT INTO room (number, capacity, price, stars, history_size) VALUES (101, 2, 100.0, 3, 5);
-INSERT INTO room (number, capacity, price, stars, history_size) VALUES (102, 4, 200.0, 4, 5);
+INSERT INTO room (number, capacity, price, stars, history_size, is_occupied) VALUES (101, 2, 100.0, 3, 5, true);
+INSERT INTO room (number, capacity, price, stars, history_size, is_occupied) VALUES (102, 4, 200.0, 4, 5, true);
 INSERT INTO room (number, capacity, price, stars, history_size) VALUES (103, 1, 80.0, 2, 5);
 
 -- Тестовые гости
-INSERT INTO guest (age, first_name, second_name, room_id) VALUES (30, 'Джон', 'Доу', 1);  -- Комната 101
-INSERT INTO guest (age, first_name, second_name, room_id) VALUES (25, 'Джейн', 'Смит', 1);  -- Комната 101
-INSERT INTO guest (age, first_name, second_name, room_id) VALUES (40, 'Алиса', 'Джонсон', 2);  -- Комната 102
+INSERT INTO guest (age, first_name, second_name, room_id) VALUES (30, 'Джон', 'Доу', 1);
+INSERT INTO guest (age, first_name, second_name, room_id) VALUES (25, 'Джейн', 'Смит', 1);
+INSERT INTO guest (age, first_name, second_name, room_id) VALUES (40, 'Алиса', 'Джонсон', 2);
 
 -- Тестовые сервисы
 INSERT INTO service (name, description, price, date) VALUES ('Завтрак', 'Утренний перекус', 15.0, '2026-01-10');

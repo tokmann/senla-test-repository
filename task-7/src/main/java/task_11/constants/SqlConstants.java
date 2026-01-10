@@ -11,7 +11,7 @@ public class SqlConstants {
     public static final String COUNT_FREE_ROOMS = "SELECT COUNT(*) FROM room WHERE is_occupied = FALSE AND under_maintenance = FALSE";
 
     // guest
-    public static final String INSERT_GUEST = "INSERT INTO guest (age, first_name, second_name, room_id) VALUES (?, ?, ?, ?)";
+    public static final String INSERT_GUEST = "INSERT INTO guest (age, first_name, second_name, room_id) VALUES (?, ?, ?, ?) RETURNING id";
     public static final String UPDATE_GUEST = "UPDATE guest SET age = ?, first_name = ?, second_name = ?, room_id = ? WHERE id = ?";
     public static final String DELETE_GUEST = "DELETE FROM guest WHERE id = ?";
     public static final String SELECT_GUEST_BY_ID = "SELECT * FROM guest WHERE id = ?";
@@ -35,7 +35,7 @@ public class SqlConstants {
 
     // stay_History
     public static final String INSERT_STAY_HISTORY = "INSERT INTO stay_history (room_id, history_entry) VALUES (?, ?)";
-    public static final String SELECT_HISTORY_BY_ROOM_ID = "SELECT history_entry FROM stay_history WHERE room_id = ? ORDER BY id DESC LIMIT ?"; // Added LIMIT for historySize
+    public static final String SELECT_HISTORY_BY_ROOM_ID = "SELECT history_entry FROM stay_history WHERE room_id = ? ORDER BY id DESC LIMIT ?";
     public static final String DELETE_HISTORY_BY_ROOM_ID = "DELETE FROM stay_history WHERE room_id = ?";
 
     private SqlConstants() {}

@@ -2,297 +2,325 @@ package task_11.service;
 
 import di.Component;
 import di.Inject;
+import task_11.db.TransactionManager;
+import task_11.db.interfaces.GuestRepository;
+import task_11.db.interfaces.StayHistoryRepository;
 import task_11.exceptions.ValidationException;
 import task_11.exceptions.rooms.RoomNotFoundException;
 import task_11.model.Guest;
 import task_11.model.Room;
-import task_11.repository.interfaces.RoomRepository;
+import task_11.db.interfaces.RoomRepository;
 import task_11.service.interfaces.IGuestManager;
 import task_11.service.interfaces.IRoomManager;
 import task_11.view.enums.RoomSortOption;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * Сервисный слой для управления номерами отеля.
- * Отвечает за бронирование, выселение, установку цен,
- * техническое обслуживание, историю и фильтрацию номеров.
- * Инкапсулирует бизнес-логику, связанную с сущностью {@link Room}.
- */
 @Component
 public class RoomManager implements IRoomManager {
 
     @Inject
-    private RoomRepository repository;
+    private RoomRepository roomRepository;
 
     @Inject
-    private IGuestManager guestManager;
+    private GuestRepository guestRepository;
 
-    /**
-     * Добавляет номер в систему.
-     * Если номер с таким ID уже существует - обновляет его.
-     * Если номер с таким физическим номером уже существует - отклоняет добавление.
-     * @param room комната для добавления
-     * @return true если добавление/обновление успешно, false если номер уже существует
-     */
+    @Inject
+    private StayHistoryRepository stayHistoryRepository;
+
+    @Inject
+    private TransactionManager transactionManager;
+
     @Override
     public boolean addRoom(Room room) {
-        if (room.getNumber() <= 0) {
-            throw new ValidationException("Номер комнаты должен быть положительным числом");
-        }
-        if (room.getCapacity() <= 0) {
-            throw new ValidationException("Вместимость комнаты должна быть положительным числом");
-        }
-        if (room.getPrice() < 0) {
-            throw new ValidationException("Цена комнаты не может быть отрицательной");
-        }
-        if (room.getStars() < 1 || room.getStars() > 5) {
-            throw new ValidationException("Количество звезд должно быть от 1 до 5");
-        }
+        validateRoom(room);
 
-        if (room.getId() != 0) {
-            Optional<Room> existingById = repository.findById(room.getId());
-            if (existingById.isPresent()) {
-                updateExistingRoom(existingById.get(), room);
-                return true;
+        transactionManager.beginTransaction();
+        try {
+            if (room.getId() != 0) {
+                Optional<Room> existing = roomRepository.findById(room.getId());
+                if (existing.isPresent()) {
+                    updateExistingRoom(existing.get(), room);
+                    transactionManager.commitTransaction();
+                    return true;
+                }
             }
-        }
 
-        Optional<Room> existingByNumber = repository.findByNumber(room.getNumber());
-        if (existingByNumber.isPresent()) {
-            return false;
-        }
+            Optional<Room> existingByNumber = roomRepository.findByNumber(room.getNumber());
+            if (existingByNumber.isPresent()) {
+                transactionManager.rollbackTransaction();
+                return false;
+            }
 
-        repository.save(room);
-        return true;
+            roomRepository.save(room);
+            transactionManager.commitTransaction();
+            return true;
+        } catch (Exception e) {
+            transactionManager.rollbackTransaction();
+            throw e;
+        }
     }
 
-    /**
-     * Заселяет гостей в номер на указанный период.
-     * Обновляет связи между гостями и номером.
-     * @param roomNumber номер комнаты для заселения
-     * @param guests список гостей для заселения
-     * @param checkInDate дата заселения
-     * @param checkOutDate дата выселения
-     * @return true если заселение успешно, false если комната не найдена или недоступна
-     */
     @Override
     public boolean checkIn(int roomNumber, List<Guest> guests, LocalDate checkInDate, LocalDate checkOutDate) {
-        if (guests == null || guests.isEmpty()) {
-            throw new ValidationException("Список гостей не может быть пустым");
-        }
-        if (checkInDate == null || checkOutDate == null) {
-            throw new ValidationException("Даты заселения и выселения не могут быть null");
-        }
-        if (checkOutDate.isBefore(checkInDate) || checkOutDate.isEqual(checkInDate)) {
-            throw new ValidationException("Дата выселения должна быть после даты заселения");
-        }
-        Optional<Room> optionalRoom = repository.findByNumber(roomNumber);
-        if (optionalRoom.isEmpty()) {
-            return false;
-        }
-        Room room = optionalRoom.get();
+        validateCheckIn(guests, checkInDate, checkOutDate);
 
-        if (room.isUnderMaintenance()) {
-            return false;
+        try {
+            Room room = roomRepository.findByNumber(roomNumber)
+                    .orElseThrow(() -> new RoomNotFoundException(roomNumber));
+
+            if (room.isUnderMaintenance() || room.isOccupied()) {
+                return false;
+            }
+
+            if (guests.size() > room.getCapacity()) {
+                return false;
+            }
+
+            boolean success = room.checkIn(guests, checkInDate, checkOutDate);
+            if (!success) {
+                return false;
+            }
+
+            roomRepository.save(room);
+
+            for (Guest guest : guests) {
+                guest.setRoom(room);
+                guest.setRoomId(room.getId());
+                guestRepository.save(guest);
+            }
+
+            String entry = String.format("Checked in %d guests on %s until %s",
+                    guests.size(),
+                    checkInDate.format(DateTimeFormatter.ISO_LOCAL_DATE),
+                    checkOutDate.format(DateTimeFormatter.ISO_LOCAL_DATE));
+            stayHistoryRepository.addEntry(room.getId(), entry);
+
+            return true;
+        } catch (Exception e) {
+            throw e;
         }
-        if (guests.size() > room.getCapacity()) {
-            return false;
-        }
-        boolean ok = room.checkIn(guests, checkInDate, checkOutDate);
-        if (!ok) {
-            return false;
-        }
-        guests.forEach(guest -> guest.setGuestRoom(room));
-        return true;
     }
 
-    /**
-     * Выселяет всех гостей из указанного номера.
-     * Удаляет гостей из репозитория.
-     * @param roomNumber номер комнаты для выселения
-     * @return true если выселение успешно, false если комната не найдена
-     */
     @Override
     public boolean checkOut(int roomNumber) {
-        Optional<Room> optionalRoom = repository.findByNumber(roomNumber);
-        if (optionalRoom.isEmpty()) {
-            return false;
-        }
-        Room room = optionalRoom.get();
-        if (!room.isOccupied()) {
-            return false;
-        }
-        List<Guest> guests = List.copyOf(room.getGuests());
-        room.checkOut();
-        guests.forEach(guest -> {
-            try {
-                guestManager.removeGuest(guest);
-            } catch (Exception e) {
-                System.err.println("Ошибка при удалении гостя: " + e.getMessage());
+        transactionManager.beginTransaction();
+        try {
+            Room room = roomRepository.findByNumber(roomNumber)
+                    .orElseThrow(() -> new RoomNotFoundException(roomNumber));
+
+            if (!room.isOccupied()) {
+                transactionManager.rollbackTransaction();
+                return false;
             }
-        });
-        return true;
+
+            room.checkOut();
+            roomRepository.save(room);
+
+            String entry = String.format("Checked out all guests on %s",
+                    LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE));
+            stayHistoryRepository.addEntry(room.getId(), entry);
+
+            transactionManager.commitTransaction();
+            return true;
+        } catch (Exception e) {
+            transactionManager.rollbackTransaction();
+            throw e;
+        }
     }
 
-    /**
-     * Помечает номер как находящийся на обслуживании.
-     * Номер можно перевести на обслуживание только если он свободен.
-     * @param roomNumber номер комнаты
-     * @param maintenance true для установки на обслуживание, false для снятия
-     */
     @Override
     public void setRoomMaintenance(int roomNumber, boolean maintenance) {
-        repository.findByNumber(roomNumber).ifPresent(room -> room.setMaintenance(maintenance));
+        transactionManager.beginTransaction();
+        try {
+            roomRepository.findByNumber(roomNumber).ifPresent(room -> {
+                room.setMaintenance(maintenance);
+                roomRepository.save(room);
+            });
+            transactionManager.commitTransaction();
+        } catch (Exception e) {
+            transactionManager.rollbackTransaction();
+            throw e;
+        }
     }
 
-    /**
-     * Изменяет цену номера.
-     * @param roomNumber номер комнаты
-     * @param newPrice новая цена за сутки
-     */
     @Override
     public void changeRoomPrice(int roomNumber, double newPrice) {
-        repository.findByNumber(roomNumber).ifPresent(room -> room.setPrice(newPrice));
+        if (newPrice < 0) {
+            throw new ValidationException("Room price cannot be negative");
+        }
+
+        transactionManager.beginTransaction();
+        try {
+            roomRepository.findByNumber(roomNumber).ifPresent(room -> {
+                room.setPrice(newPrice);
+                roomRepository.save(room);
+            });
+            transactionManager.commitTransaction();
+        } catch (Exception e) {
+            transactionManager.rollbackTransaction();
+            throw e;
+        }
     }
 
-    /**
-     * Возвращает список комнат, отсортированный по указанному критерию.
-     * @param option критерий сортировки комнат
-     * @return отсортированный список комнат
-     */
     @Override
     public List<Room> getSortedRooms(RoomSortOption option) {
-        return repository.findAll().stream()
+        return getAllRooms().stream()
                 .sorted(option.getComparator())
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Возвращает все комнаты системы.
-     * @return список всех комнат
-     */
     @Override
     public List<Room> getAllRooms() {
-        return repository.findAll();
+        transactionManager.beginTransaction();
+        try {
+            List<Room> rooms = roomRepository.findAll();
+            rooms.forEach(room -> {
+                List<Guest> guests = guestRepository.findByRoomId(room.getId());
+                room.setGuests(guests);
+                room.setOccupied(!guests.isEmpty());
+                room.setStayHistory(stayHistoryRepository.findByRoomId(room.getId(), room.getHistorySize()));
+            });
+            transactionManager.commitTransaction();
+            return rooms;
+        } catch (Exception e) {
+            transactionManager.rollbackTransaction();
+            throw e;
+        }
     }
 
-    /**
-     * Находит комнату по физическому номеру.
-     * @param roomNumber физический номер комнаты
-     * @return Optional с найденной комнатой или empty если не найдена
-     */
     @Override
     public Optional<Room> findRoomByNumber(int roomNumber) {
-        return repository.findByNumber(roomNumber);
+        transactionManager.beginTransaction();
+        try {
+            Optional<Room> roomOpt = roomRepository.findByNumber(roomNumber);
+            roomOpt.ifPresent(room -> {
+                roomRepository.loadGuestsForRoom(room);
+                room.setStayHistory(stayHistoryRepository.findByRoomId(room.getId(), room.getHistorySize()));
+            });
+            transactionManager.commitTransaction();
+            return roomOpt;
+        } catch (Exception e) {
+            transactionManager.rollbackTransaction();
+            throw e;
+        }
     }
 
-    /**
-     * Возвращает список всех свободных и не находящихся на обслуживании номеров.
-     * @param option критерий сортировки результатов
-     * @return отсортированный список свободных комнат
-     */
     @Override
     public List<Room> getFreeRooms(RoomSortOption option) {
-        return repository.findAll().stream()
-                .filter(r -> !r.isOccupied() && !r.isUnderMaintenance())
+        return getAllRooms().stream()
+                .filter(room -> !room.isOccupied() && !room.isUnderMaintenance())
                 .sorted(option.getComparator())
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Подсчитывает количество свободных номеров.
-     * @return количество свободных номеров
-     */
     @Override
     public int countFreeRooms() {
-        return (int) repository.findAll().stream()
-                .filter(r -> !r.isOccupied())
-                .count();
+        transactionManager.beginTransaction();
+        try {
+            int count = roomRepository.countFree();
+            transactionManager.commitTransaction();
+            return count;
+        } catch (Exception e) {
+            transactionManager.rollbackTransaction();
+            throw e;
+        }
     }
 
-    /**
-     * Возвращает список номеров, которые освободятся к указанной дате.
-     * Включает уже свободные номера и номера, которые будут свободны к дате.
-     * @param date дата для проверки доступности
-     * @return список доступных к дате номеров
-     */
     @Override
     public List<Room> findRoomsThatWillBeFree(LocalDate date) {
         if (date == null) {
-            throw new ValidationException("Дата не может быть null");
+            throw new ValidationException("Date cannot be null");
         }
-        return repository.findAll().stream()
-                .filter(r -> !r.isOccupied() ||
-                        (r.getCheckOutDate() != null &&
-                                (r.getCheckOutDate().isBefore(date) || r.getCheckOutDate().isEqual(date))))
+
+        return getAllRooms().stream()
+                .filter(room -> !room.isOccupied() ||
+                        (room.getCheckOutDate() != null && !room.getCheckOutDate().isAfter(date)))
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Вычисляет полную стоимость проживания в номере по количеству дней.
-     * Минимальная продолжительность проживания - 1 день.
-     * @param room комната для расчета стоимости
-     * @return общая стоимость проживания
-     */
     @Override
     public double fullRoomPrice(Room room) {
         if (room == null) {
-            throw new ValidationException("Комната не может быть null");
+            throw new ValidationException("Room cannot be null");
         }
         if (room.getCheckInDate() == null || room.getCheckOutDate() == null) {
             return 0.0;
         }
-        long days = ChronoUnit.DAYS.between(room.getCheckInDate(), room.getCheckOutDate());
-        if (days <= 0) days = 1;
-        return days * room.getPrice();
+        long days = java.time.temporal.ChronoUnit.DAYS.between(
+                room.getCheckInDate(),
+                room.getCheckOutDate()
+        );
+        return Math.max(1, days) * room.getPrice();
     }
 
-    /**
-     * Возвращает историю последних заселений в номер.
-     * @param roomNumber номер комнаты
-     * @return список строк с историей проживания
-     */
     @Override
     public List<String> getRoomHistory(int roomNumber) {
-        Room room = findRoomByNumber(roomNumber)
-                .orElseThrow(() -> new RoomNotFoundException(roomNumber));
-
-        return room.getLastStays();
+        transactionManager.beginTransaction();
+        try {
+            Room room = roomRepository.findByNumber(roomNumber)
+                    .orElseThrow(() -> new RoomNotFoundException(roomNumber));
+            List<String> history = stayHistoryRepository.findByRoomId(room.getId(), room.getHistorySize());
+            transactionManager.commitTransaction();
+            return history;
+        } catch (Exception e) {
+            transactionManager.rollbackTransaction();
+            throw e;
+        }
     }
 
-    /**
-     * Находит комнату по идентификатору.
-     * @param id идентификатор комнаты
-     * @return Optional с найденной комнатой или empty если не найдена
-     */
     @Override
     public Optional<Room> findRoomById(long id) {
-        return repository.findById(id);
+        transactionManager.beginTransaction();
+        try {
+            Optional<Room> roomOpt = roomRepository.findById(id);
+            roomOpt.ifPresent(room -> {
+                roomRepository.loadGuestsForRoom(room);
+                room.setStayHistory(stayHistoryRepository.findByRoomId(room.getId(), room.getHistorySize()));
+            });
+            transactionManager.commitTransaction();
+            return roomOpt;
+        } catch (Exception e) {
+            transactionManager.rollbackTransaction();
+            throw e;
+        }
     }
 
-    /**
-     * Обновляет данные существующей комнаты.
-     * Изменяет цену и статус обслуживания, если комната свободная.
-     * @param existing существующая комната
-     * @param newData новые данные
-     */
+    private void validateRoom(Room room) {
+        if (room.getNumber() <= 0) {
+            throw new ValidationException("Room number must be positive");
+        }
+        if (room.getCapacity() <= 0) {
+            throw new ValidationException("Room capacity must be positive");
+        }
+        if (room.getPrice() < 0) {
+            throw new ValidationException("Room price cannot be negative");
+        }
+        if (room.getStars() < 1 || room.getStars() > 5) {
+            throw new ValidationException("Room stars must be between 1 and 5");
+        }
+    }
+
+    private void validateCheckIn(List<Guest> guests, LocalDate checkIn, LocalDate checkOut) {
+        if (guests == null || guests.isEmpty()) {
+            throw new ValidationException("Guest list cannot be empty");
+        }
+        if (checkIn == null || checkOut == null) {
+            throw new ValidationException("Dates cannot be null");
+        }
+        if (!checkOut.isAfter(checkIn)) {
+            throw new ValidationException("Check-out must be after check-in");
+        }
+    }
+
     private void updateExistingRoom(Room existing, Room newData) {
         existing.setPrice(newData.getPrice());
         if (!existing.isOccupied()) {
             existing.setMaintenance(newData.isUnderMaintenance());
         }
-        System.out.println("Обновлена комната ID: " + existing.getId() + ", номер: " + existing.getNumber());
     }
-
-    /**
-     * Метод для синхронизации Id после десериализации
-     * */
-    public void syncIdGen() {
-        repository.syncIdGen();
-    }
-
 }

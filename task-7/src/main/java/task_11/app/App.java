@@ -7,13 +7,10 @@ import task_11.controller.ServiceController;
 import task_11.controller.interfaces.IGuestController;
 import task_11.controller.interfaces.IRoomController;
 import task_11.controller.interfaces.IServiceController;
-import task_11.serialize.StateManager;
-import task_11.repository.InMemoryGuestRepository;
-import task_11.repository.InMemoryRoomRepository;
-import task_11.repository.InMemoryServiceRepository;
-import task_11.repository.interfaces.GuestRepository;
-import task_11.repository.interfaces.RoomRepository;
-import task_11.repository.interfaces.ServiceRepository;
+import task_11.db.ConnectionProvider;
+import task_11.db.TransactionManager;
+import task_11.db.dao.jdbc.*;
+import task_11.db.interfaces.*;
 import task_11.service.GuestManager;
 import task_11.service.RoomManager;
 import task_11.service.ServiceManager;
@@ -35,19 +32,41 @@ public class App {
     public static void main(String[] args) {
         DIContainer container = new DIContainer();
 
+        container.register(TransactionManager.class, TransactionManager.class);
+        container.register(ConnectionProvider.class, ConnectionProvider.class);
+
         container.register(IGuestManager.class, GuestManager.class);
         container.register(IRoomManager.class, RoomManager.class);
         container.register(IServiceManager.class, ServiceManager.class);
+
         container.register(IGuestController.class, GuestController.class);
         container.register(IRoomController.class, RoomController.class);
         container.register(IServiceController.class, ServiceController.class);
-        container.register(GuestRepository.class, InMemoryGuestRepository.class);
-        container.register(RoomRepository.class, InMemoryRoomRepository.class);
-        container.register(ServiceRepository.class, InMemoryServiceRepository.class);
+
+        container.register(GuestRepository.class, JdbcGuestDao.class);
+        container.register(RoomRepository.class, JdbcRoomDao.class);
+        container.register(ServiceRepository.class, JdbcServiceDao.class);
+        container.register(GuestServiceRepository.class, JdbcGuestServiceDao.class);
+        container.register(StayHistoryRepository.class, JdbcStayHistoryDao.class);
+
         container.register(ConsoleView.class, ConsoleView.class);
+        container.register(ConsoleUI.class, ConsoleUI.class);
 
-        ConsoleUI ui = container.getBean(ConsoleUI.class);
+        try {
+            ConsoleUI ui = container.getBean(ConsoleUI.class);
 
-        ui.run();
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+
+                System.out.println("Закрытие соединения с базой данных...");
+                ConnectionProvider.getInstance().close();
+                System.out.println("Приложение завершено корректно.");
+            }));
+
+            ui.run();
+        } catch (RuntimeException e) {
+            System.err.println("Критическая ошибка при запуске приложения: " + e.getMessage());
+            e.printStackTrace();
+            System.exit(1);
+        }
     }
 }
