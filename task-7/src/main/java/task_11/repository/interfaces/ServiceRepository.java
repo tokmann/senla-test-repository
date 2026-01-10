@@ -1,6 +1,6 @@
-package task_8.repository.interfaces;
+package task_11.repository.interfaces;
 
-import task_8.model.Service;
+import task_11.model.Service;
 
 import java.util.Optional;
 

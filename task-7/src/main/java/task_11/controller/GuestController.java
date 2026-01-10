@@ -1,15 +1,15 @@
-package task_8.controller;
+package task_11.controller;
 
 import di.Component;
 import di.Inject;
-import task_8.controller.interfaces.IGuestController;
-import task_8.model.Guest;
-import task_8.model.Service;
-import task_8.service.interfaces.IGuestManager;
-import task_8.service.interfaces.IRoomManager;
-import task_8.service.interfaces.IServiceManager;
-import task_8.view.enums.GuestSortOption;
-import task_8.view.enums.ServiceSortOption;
+import task_11.controller.interfaces.IGuestController;
+import task_11.model.Guest;
+import task_11.model.Service;
+import task_11.service.interfaces.IGuestManager;
+import task_11.service.interfaces.IRoomManager;
+import task_11.service.interfaces.IServiceManager;
+import task_11.view.enums.GuestSortOption;
+import task_11.view.enums.ServiceSortOption;
 
 import java.time.LocalDate;
 import java.util.List;

@@ -1,7 +1,7 @@
-package task_8.controller.interfaces;
+package task_11.controller.interfaces;
 
-import task_8.model.Service;
-import task_8.view.enums.ServiceSortOption;
+import task_11.model.Service;
+import task_11.view.enums.ServiceSortOption;
 
 import java.util.List;
 

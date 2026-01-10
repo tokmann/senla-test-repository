@@ -1,8 +1,8 @@
-package task_8.repository;
+package task_11.repository;
 
 import di.Component;
-import task_8.model.Guest;
-import task_8.repository.interfaces.GuestRepository;
+import task_11.model.Guest;
+import task_11.repository.interfaces.GuestRepository;
 
 import java.lang.reflect.Field;
 import java.util.*;

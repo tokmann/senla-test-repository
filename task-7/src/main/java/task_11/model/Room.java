@@ -1,47 +1,46 @@
-package task_8.model;
+package task_11.model;
 
 import config.AnnotationConfigurationLoader;
 import config.ConfigProperty;
 import config.ConfigType;
 
-import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * Модель номера в отеле.
  * Хранит данные о состоянии номера, проживающих гостях и истории заселений.
  */
-public class Room implements Serializable {
-
-    private static final long serialVersionUID = 1L;
+public class Room {
 
     private long id;
-    private final int number;
-    private final int capacity;
-    private double price; // Цена за сутки
-    private final int stars;
+    private int number;
+    private int capacity;
+    private double price;
+    private int stars;
     private boolean isOccupied;
     private boolean underMaintenance;
 
-    @ConfigProperty(
-            propertyName = "room.status.change.enabled",
-            type = ConfigType.BOOLEAN
-    )
+    @ConfigProperty(propertyName = "room.status.change.enabled", type = ConfigType.BOOLEAN)
     private boolean statusChangeEnabled;
 
-    private transient List<Guest> guests;
-    private final List<String> stayHistory = new ArrayList<>();
+    private List<Guest> guests;
+    private List<String> stayHistory;
 
-    @ConfigProperty(
-            propertyName = "room.history.size",
-            type = ConfigType.INTEGER
-    )
+    @ConfigProperty(propertyName = "room.history.size", type = ConfigType.INTEGER)
     private int historySize;
 
     private LocalDate checkInDate;
     private LocalDate checkOutDate;
+
+    // No-arg constructor
+    public Room() {
+        this.guests = new ArrayList<>();
+        this.stayHistory = new ArrayList<>();
+    }
 
     public Room(long id, int number, int capacity, double price, int stars) {
         this.id = id;
@@ -52,6 +51,7 @@ public class Room implements Serializable {
         this.isOccupied = false;
         this.underMaintenance = false;
         this.guests = new ArrayList<>();
+        this.stayHistory = new ArrayList<>();
         AnnotationConfigurationLoader.configure(this);
     }
 
@@ -59,27 +59,24 @@ public class Room implements Serializable {
         return id;
     }
 
-    public boolean isUnderMaintenance() {
-        return underMaintenance;
-    }
-
-    public List<Guest> getGuests() {
-        if (guests == null) {
-            guests = new ArrayList<>();
-        }
-        return guests;
-    }
-
-    public void setGuests(List<Guest> guests) {
-        this.guests = guests != null ? guests : new ArrayList<>();
+    public void setId(long id) {
+        this.id = id;
     }
 
     public int getNumber() {
         return number;
     }
 
+    public void setNumber(int number) {
+        this.number = number;
+    }
+
     public int getCapacity() {
         return capacity;
+    }
+
+    public void setCapacity(int capacity) {
+        this.capacity = capacity;
     }
 
     public double getPrice() {
@@ -94,121 +91,147 @@ public class Room implements Serializable {
         return stars;
     }
 
+    public void setStars(int stars) {
+        this.stars = stars;
+    }
+
     public boolean isOccupied() {
         return isOccupied;
     }
 
-    public void setIsOccupied(boolean occupied) {
-        this.isOccupied = occupied;
+    public void setOccupied(boolean occupied) {
+        isOccupied = occupied;
     }
 
-    public LocalDate getCheckInDate() {
-        return checkInDate;
+    public boolean isUnderMaintenance() {
+        return underMaintenance;
     }
 
-    public LocalDate getCheckOutDate() {
-        return checkOutDate;
+    public void setUnderMaintenance(boolean underMaintenance) {
+        this.underMaintenance = underMaintenance;
     }
 
     public boolean isStatusChangeEnabled() {
         return statusChangeEnabled;
     }
 
+    public void setStatusChangeEnabled(boolean statusChangeEnabled) {
+        this.statusChangeEnabled = statusChangeEnabled;
+    }
+
+    public List<Guest> getGuests() {
+        if (guests == null) {
+            guests = new ArrayList<>();
+        }
+        return guests;
+    }
+
+    public void setGuests(List<Guest> guests) {
+        this.guests = guests != null ? new ArrayList<>(guests) : new ArrayList<>();
+    }
+
     public List<String> getStayHistory() {
-        return stayHistory;
+        return new ArrayList<>(stayHistory); // Defensive copy
+    }
+
+    public void setStayHistory(List<String> stayHistory) {
+        this.stayHistory = stayHistory != null ? new ArrayList<>(stayHistory) : new ArrayList<>();
     }
 
     public int getHistorySize() {
         return historySize;
     }
 
-    /**
-     * Возвращает строковое представление номера.
-     * Включает ID, номер, вместимость, категорию, цену, статус и обслуживание.
-     * @return форматированная строка с информацией о номере
-     */
+    public void setHistorySize(int historySize) {
+        this.historySize = historySize;
+    }
+
+    public LocalDate getCheckInDate() {
+        return checkInDate;
+    }
+
+    public void setCheckInDate(LocalDate checkInDate) {
+        this.checkInDate = checkInDate;
+    }
+
+    public LocalDate getCheckOutDate() {
+        return checkOutDate;
+    }
+
+    public void setCheckOutDate(LocalDate checkOutDate) {
+        this.checkOutDate = checkOutDate;
+    }
+
     @Override
     public String toString() {
-        String status = isOccupied ? "Занят (" + guests + ") с " + getCheckInDate() + " по " + getCheckOutDate() : "Свободен";
-
+        String status = isOccupied ? "Занят (" + guests.size() + " гостей) с " + checkInDate + " по " + checkOutDate : "Свободен";
         String maintenance = underMaintenance ? ", На обслуживании" : "";
         return "ID - " + id + " | Номер " + number + ", Вместимость " + capacity + ", Кол-во звезд: " + stars + ", Цена: " + price + ", Статус: " + status + maintenance;
     }
 
-    /**
-     * Заселяет гостей в номер на указанный период.
-     * Проверяет доступность номера и достаточную вместимость.
-     * Обновляет историю проживания.
-     * @param newGuests список гостей для заселения
-     * @param checkInDate дата заселения
-     * @param checkOutDate дата выселения
-     * @return true если заселение успешно, false если номер недоступен
-     */
     public boolean checkIn(List<Guest> newGuests, LocalDate checkInDate, LocalDate checkOutDate) {
         if (underMaintenance) return false;
         int availableSpots = capacity - guests.size();
         if (newGuests.size() > availableSpots) return false;
-
+        for (Guest guest : newGuests) {
+            guest.setRoomId(this.id);
+            guest.setRoom(this);
+        }
         guests.addAll(newGuests);
         this.isOccupied = true;
         this.checkInDate = checkInDate;
         this.checkOutDate = checkOutDate;
-
         String guestNames = newGuests.stream()
-                .map(g -> g.getFirstName() + " " + g.getSecondName())
-                .toList()
-                .toString();
+                .map(Guest::getFullName)
+                .collect(Collectors.joining(", "));
         stayHistory.add("Гости: " + guestNames + " проживали с " + checkInDate + " по " + checkOutDate);
-
         while (stayHistory.size() > historySize) {
             stayHistory.remove(0);
         }
         return true;
     }
 
-    /**
-     * Возвращает последние записи из истории проживания.
-     * @return список строк с историей проживания
-     */
     public List<String> getLastStays() {
-        int size = stayHistory.size();
-        return stayHistory.subList(0, size);
+        return new ArrayList<>(stayHistory);
     }
 
-    /**
-     * Выселяет всех гостей из номера.
-     * Очищает список гостей и сбрасывает даты проживания.
-     */
     public void checkOut() {
         this.isOccupied = false;
-        this.guests = new ArrayList<>();
+        for (Guest guest : guests) {
+            guest.setRoomId(0); // Или null, но long
+            guest.setRoom(null);
+        }
+        this.guests.clear();
         clearOccupationTime();
     }
 
-    /**
-     * Сбрасывает даты заселения и выселения.
-     */
     public void clearOccupationTime() {
         this.checkInDate = null;
         this.checkOutDate = null;
     }
 
-    /**
-     * Устанавливает статус обслуживания номера.
-     * Номер можно перевести на обслуживание только если он свободен.
-     * @param maintenance true для установки на обслуживание, false для снятия
-     */
     public void setMaintenance(boolean maintenance) {
-        System.out.println(statusChangeEnabled);
         if (!statusChangeEnabled) {
             throw new IllegalStateException("Изменение статуса номера отключено в конфигурации");
         }
-
         if (!isOccupied) {
             this.underMaintenance = maintenance;
             System.out.println("Обслуживание комнаты: " + maintenance);
         } else {
             System.out.println("Комната занята");
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Room room = (Room) o;
+        return id == room.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }

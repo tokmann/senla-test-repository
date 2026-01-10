@@ -1,4 +1,4 @@
-package task_8.view.factory;
+package task_11.view.factory;
 
 /**
  * Провайдер для получения единственного экземпляра фабрики UI.

@@ -1,14 +1,14 @@
-package task_8.serialize;
+package task_11.serialize;
 
 import config.AnnotationConfigurationLoader;
 import di.Component;
 import di.Inject;
-import task_8.model.Guest;
-import task_8.model.Room;
-import task_8.model.Service;
-import task_8.service.interfaces.IGuestManager;
-import task_8.service.interfaces.IRoomManager;
-import task_8.service.interfaces.IServiceManager;
+import task_11.model.Guest;
+import task_11.model.Room;
+import task_11.model.Service;
+import task_11.service.interfaces.IGuestManager;
+import task_11.service.interfaces.IRoomManager;
+import task_11.service.interfaces.IServiceManager;
 
 import java.io.*;
 import java.util.*;

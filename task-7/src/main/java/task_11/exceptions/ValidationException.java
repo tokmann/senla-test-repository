@@ -1,4 +1,4 @@
-package task_8.exceptions;
+package task_11.exceptions;
 
 /**
  * Исключения, связанные с валидацией данных.

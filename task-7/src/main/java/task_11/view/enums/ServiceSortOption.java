@@ -1,7 +1,7 @@
-package task_8.view.enums;
+package task_11.view.enums;
 
-import task_8.model.Service;
-import task_8.service.ServiceManager;
+import task_11.model.Service;
+import task_11.service.ServiceManager;
 
 import java.util.Comparator;
 

@@ -1,4 +1,4 @@
-package task_8.exceptions.rooms;
+package task_11.exceptions.rooms;
 
 public class RoomCapacityExceededException extends RoomException {
 

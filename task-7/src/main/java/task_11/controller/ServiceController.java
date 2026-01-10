@@ -1,11 +1,11 @@
-package task_8.controller;
+package task_11.controller;
 
 import di.Component;
 import di.Inject;
-import task_8.controller.interfaces.IServiceController;
-import task_8.model.Service;
-import task_8.service.interfaces.IServiceManager;
-import task_8.view.enums.ServiceSortOption;
+import task_11.controller.interfaces.IServiceController;
+import task_11.model.Service;
+import task_11.service.interfaces.IServiceManager;
+import task_11.view.enums.ServiceSortOption;
 
 import java.util.List;
 

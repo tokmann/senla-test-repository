@@ -1,29 +1,27 @@
-package task_8.app;
+package task_11.app;
 
 import di.DIContainer;
-import task_8.controller.GuestController;
-import task_8.controller.RoomController;
-import task_8.controller.ServiceController;
-import task_8.controller.interfaces.IGuestController;
-import task_8.controller.interfaces.IRoomController;
-import task_8.controller.interfaces.IServiceController;
-import task_8.serialize.StateManager;
-import task_8.repository.InMemoryGuestRepository;
-import task_8.repository.InMemoryRoomRepository;
-import task_8.repository.InMemoryServiceRepository;
-import task_8.repository.interfaces.GuestRepository;
-import task_8.repository.interfaces.RoomRepository;
-import task_8.repository.interfaces.ServiceRepository;
-import task_8.service.GuestManager;
-import task_8.service.RoomManager;
-import task_8.service.ServiceManager;
-import task_8.service.interfaces.IGuestManager;
-import task_8.service.interfaces.IRoomManager;
-import task_8.service.interfaces.IServiceManager;
-import task_8.ui.ConsoleUI;
-import task_8.view.ConsoleView;
-import task_8.view.factory.UIFactory;
-import task_8.view.factory.UIFactoryProvider;
+import task_11.controller.GuestController;
+import task_11.controller.RoomController;
+import task_11.controller.ServiceController;
+import task_11.controller.interfaces.IGuestController;
+import task_11.controller.interfaces.IRoomController;
+import task_11.controller.interfaces.IServiceController;
+import task_11.serialize.StateManager;
+import task_11.repository.InMemoryGuestRepository;
+import task_11.repository.InMemoryRoomRepository;
+import task_11.repository.InMemoryServiceRepository;
+import task_11.repository.interfaces.GuestRepository;
+import task_11.repository.interfaces.RoomRepository;
+import task_11.repository.interfaces.ServiceRepository;
+import task_11.service.GuestManager;
+import task_11.service.RoomManager;
+import task_11.service.ServiceManager;
+import task_11.service.interfaces.IGuestManager;
+import task_11.service.interfaces.IRoomManager;
+import task_11.service.interfaces.IServiceManager;
+import task_11.ui.ConsoleUI;
+import task_11.view.ConsoleView;
 
 /**
  * Главный класс консольного приложения отеля.

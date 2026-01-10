@@ -1,8 +1,8 @@
-package task_8.repository;
+package task_11.repository;
 
 import di.Component;
-import task_8.model.Service;
-import task_8.repository.interfaces.ServiceRepository;
+import task_11.model.Service;
+import task_11.repository.interfaces.ServiceRepository;
 
 import java.lang.reflect.Field;
 import java.util.*;

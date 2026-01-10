@@ -1,4 +1,4 @@
-package task_8.view;
+package task_11.view;
 
 import di.Component;
 

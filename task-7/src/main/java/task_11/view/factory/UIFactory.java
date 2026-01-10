@@ -1,6 +1,6 @@
-package task_8.view.factory;
+package task_11.view.factory;
 
-import task_8.view.ConsoleView;
+import task_11.view.ConsoleView;
 
 /**
  * Интерфейс фабрики пользовательского интерфейса.

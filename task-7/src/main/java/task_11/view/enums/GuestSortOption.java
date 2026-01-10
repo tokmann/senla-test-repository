@@ -1,7 +1,7 @@
-package task_8.view.enums;
+package task_11.view.enums;
 
-import task_8.model.Guest;
-import task_8.service.GuestManager;
+import task_11.model.Guest;
+import task_11.service.GuestManager;
 
 import java.util.Comparator;
 

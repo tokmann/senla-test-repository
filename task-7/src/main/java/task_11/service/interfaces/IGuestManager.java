@@ -1,9 +1,9 @@
-package task_8.service.interfaces;
+package task_11.service.interfaces;
 
-import task_8.model.Guest;
-import task_8.model.Service;
-import task_8.view.enums.GuestSortOption;
-import task_8.view.enums.ServiceSortOption;
+import task_11.model.Guest;
+import task_11.model.Service;
+import task_11.view.enums.GuestSortOption;
+import task_11.view.enums.ServiceSortOption;
 
 import java.time.LocalDate;
 import java.util.List;

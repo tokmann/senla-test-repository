@@ -1,15 +1,15 @@
-package task_8.service;
+package task_11.service;
 
 import di.Component;
 import di.Inject;
-import task_8.exceptions.ValidationException;
-import task_8.exceptions.services.ServiceAlreadyExistsException;
-import task_8.exceptions.services.ServiceNotFoundException;
-import task_8.model.Service;
-import task_8.repository.InMemoryServiceRepository;
-import task_8.repository.interfaces.ServiceRepository;
-import task_8.service.interfaces.IServiceManager;
-import task_8.view.enums.ServiceSortOption;
+import task_11.exceptions.ValidationException;
+import task_11.exceptions.services.ServiceAlreadyExistsException;
+import task_11.exceptions.services.ServiceNotFoundException;
+import task_11.model.Service;
+import task_11.repository.InMemoryServiceRepository;
+import task_11.repository.interfaces.ServiceRepository;
+import task_11.service.interfaces.IServiceManager;
+import task_11.view.enums.ServiceSortOption;
 
 import java.util.*;
 import java.util.stream.Collectors;

@@ -1,8 +1,8 @@
-package task_8.repository;
+package task_11.repository;
 
 import di.Component;
-import task_8.model.Room;
-import task_8.repository.interfaces.RoomRepository;
+import task_11.model.Room;
+import task_11.repository.interfaces.RoomRepository;
 
 import java.lang.reflect.Field;
 import java.util.*;

@@ -1,4 +1,4 @@
-package task_8.exceptions.guests;
+package task_11.exceptions.guests;
 
 public class GuestNotCheckedInException extends GuestException {
 

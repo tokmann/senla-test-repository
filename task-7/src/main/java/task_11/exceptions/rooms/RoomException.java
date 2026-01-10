@@ -1,6 +1,6 @@
-package task_8.exceptions.rooms;
+package task_11.exceptions.rooms;
 
-import task_8.exceptions.HotelException;
+import task_11.exceptions.HotelException;
 
 /**
  * Исключения, связанные с операциями над комнатами.

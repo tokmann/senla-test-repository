@@ -1,6 +1,6 @@
-package task_8.exceptions.io;
+package task_11.exceptions.io;
 
-import task_8.exceptions.HotelException;
+import task_11.exceptions.HotelException;
 
 /**
  * Исключения, связанные с импортом/экспортом данных.

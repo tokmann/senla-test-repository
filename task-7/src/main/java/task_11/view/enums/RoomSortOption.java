@@ -1,7 +1,7 @@
-package task_8.view.enums;
+package task_11.view.enums;
 
-import task_8.model.Room;
-import task_8.service.RoomManager;
+import task_11.model.Room;
+import task_11.service.RoomManager;
 
 import java.util.Comparator;
 
