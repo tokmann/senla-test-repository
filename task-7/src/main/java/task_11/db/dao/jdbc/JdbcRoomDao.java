@@ -12,6 +12,10 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * DAO для работы с комнатами отеля.
+ * Предоставляет методы для CRUD операций и поиска комнат.
+ */
 @Component
 public class JdbcRoomDao extends AbstractDao<Room> implements RoomRepository {
 
@@ -70,11 +74,20 @@ public class JdbcRoomDao extends AbstractDao<Room> implements RoomRepository {
     }
 
     @Override
-    public void loadGuestsForRoom(Room room) {}
+    public void loadGuestsForRoom(Room room) {
+        // Загрузка гостей для комнаты выполняется в сервисном слое (чтобы избежать рекурсии)
+    }
 
     @Override
-    public void loadHistoryForRoom(Room room) {}
+    public void loadHistoryForRoom(Room room) {
+        // Загрузка истории для комнаты выполняется в сервисном слое (чтобы избежать рекурсии)
+    }
 
+    /**
+     * Преобразует ResultSet в объект Room.
+     * @param rs ResultSet с данными комнаты
+     * @return объект Room
+     */
     private Room mapRoom(ResultSet rs) throws SQLException {
         Room room = new Room();
         room.setId(rs.getLong("id"));
@@ -90,5 +103,4 @@ public class JdbcRoomDao extends AbstractDao<Room> implements RoomRepository {
         room.setCheckOutDate(rs.getObject("check_out_date", LocalDate.class));
         return room;
     }
-
 }

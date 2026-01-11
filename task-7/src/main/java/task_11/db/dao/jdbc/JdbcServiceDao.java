@@ -12,6 +12,10 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * DAO для работы с услугами отеля.
+ * Предоставляет методы для CRUD операций с услугами.
+ */
 @Component
 public class JdbcServiceDao extends AbstractDao<Service> implements ServiceRepository {
 
@@ -57,6 +61,11 @@ public class JdbcServiceDao extends AbstractDao<Service> implements ServiceRepos
         return Optional.ofNullable(service);
     }
 
+    /**
+     * Преобразует ResultSet в объект Service.
+     * @param rs ResultSet с данными услуги
+     * @return объект Service
+     */
     private Service mapService(ResultSet rs) throws SQLException {
         Service service = new Service();
         service.setId(rs.getLong("id"));

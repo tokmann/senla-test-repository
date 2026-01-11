@@ -10,4 +10,8 @@ public class RoomException extends HotelException {
     public RoomException(String message) {
         super(message);
     }
+
+    public RoomException(String message, Exception e) {
+        super(message, e);
+    }
 }

@@ -6,7 +6,7 @@ public class ServiceNotFoundException extends ServiceException {
         super("Услуга '" + serviceName + "' не найдена");
     }
 
-    public ServiceNotFoundException(long serviceId) {
-        super("Услуга с ID " + serviceId + " не найдена");
+    public ServiceNotFoundException(long serviceId, Exception e) {
+        super("Услуга с ID " + serviceId + " не найдена", e);
     }
 }

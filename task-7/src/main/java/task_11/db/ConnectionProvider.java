@@ -1,10 +1,8 @@
 package task_11.db;
 
-import config.AnnotationConfigurationLoader;
-import config.ConfigProperty;
-import config.ConfigType;
 import di.Component;
-import di.Inject;
+import task_11.exceptions.db.DatabaseConfigurationException;
+import task_11.exceptions.db.DatabaseConnectionException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,6 +11,11 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
 
+/**
+ * Провайдер соединений с базой данных.
+ * Реализует паттерн Singleton для управления единственным экземпляром соединения с БД.
+ * Загружает конфигурацию из файла application.properties и инициализирует соединение.
+ */
 @Component
 public class ConnectionProvider {
 
@@ -23,6 +26,11 @@ public class ConnectionProvider {
     private static String USER;
     private static String PASSWORD;
 
+    /**
+     * Приватный конструктор для реализации паттерна Singleton.
+     * Если экземпляр уже существует, использует существующее соединение.
+     * В противном случае загружает конфигурацию и инициализирует новое соединение.
+     */
     public ConnectionProvider() {
         if (instance != null) {
             this.connection = instance.connection;
@@ -33,11 +41,14 @@ public class ConnectionProvider {
         }
     }
 
+    /**
+     * Загружает параметры подключения к базе данных из файла конфигурации.
+     */
     private void loadConfiguration() {
         Properties props = new Properties();
         try (InputStream is = getClass().getClassLoader().getResourceAsStream(CONFIG_FILE)) {
             if (is == null) {
-                throw new RuntimeException("Файл конфигурации " + CONFIG_FILE + " не найден в classpath");
+                throw new DatabaseConfigurationException("Файл конфигурации " + CONFIG_FILE + " не найден в classpath");
             }
             props.load(is);
 
@@ -46,26 +57,34 @@ public class ConnectionProvider {
             PASSWORD = props.getProperty("db.password");
 
             if (DB_URL == null || USER == null || PASSWORD == null) {
-                throw new RuntimeException("Отсутствуют обязательные параметры базы данных в " + CONFIG_FILE);
+                throw new DatabaseConfigurationException("Отсутствуют обязательные параметры базы данных в " + CONFIG_FILE);
             }
         } catch (IOException e) {
-            throw new RuntimeException("Ошибка загрузки файла конфигурации " + CONFIG_FILE, e);
+            throw new DatabaseConfigurationException("Ошибка загрузки файла конфигурации " + CONFIG_FILE, e);
         }
     }
 
+    /**
+     * Инициализирует соединение с базой данных.
+     */
     private void initConnection() {
         try {
             Class.forName("org.postgresql.Driver");
             connection = DriverManager.getConnection(DB_URL, USER, PASSWORD);
             connection.setAutoCommit(false);
         } catch (ClassNotFoundException e) {
-            throw new RuntimeException("PostgreSQL JDBC Driver не найден. Добавьте зависимость в проект.", e);
+            throw new DatabaseConnectionException("PostgreSQL JDBC Driver не найден. Добавьте зависимость в проект.", e);
         } catch (SQLException e) {
-            throw new RuntimeException("Не удалось подключиться к базе данных: " + e.getMessage() +
+            throw new DatabaseConnectionException("Не удалось подключиться к базе данных: " + e.getMessage() +
                     ". Проверьте параметры в " + CONFIG_FILE, e);
         }
     }
 
+    /**
+     * Возвращает единственный экземпляр ConnectionProvider.
+     * Если экземпляр еще не создан, инициализирует его.
+     * @return единственный экземпляр ConnectionProvider
+     */
     public static ConnectionProvider getInstance() {
         if (instance == null) {
             instance = new ConnectionProvider();
@@ -73,17 +92,24 @@ public class ConnectionProvider {
         return instance;
     }
 
+    /**
+     * Возвращает текущее соединение с базой данных.
+     * @return соединение с базой данных
+     */
     public Connection getConnection() {
         return connection;
     }
 
+    /**
+     * Закрывает соединение с базой данных.
+     */
     public void close() {
         try {
             if (connection != null && !connection.isClosed()) {
                 connection.close();
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Не удалось закрыть соединение с базой данных", e);
+            throw new DatabaseConfigurationException("Не удалось закрыть соединение с базой данных", e);
         }
     }
 }

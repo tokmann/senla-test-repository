@@ -13,9 +13,8 @@ public class Service {
     private String description;
     private double price;
     private LocalDate date;
-    private long guestId; // Foreign key для связи с Guest
+    private long guestId;
 
-    // No-arg
     public Service() {
     }
 

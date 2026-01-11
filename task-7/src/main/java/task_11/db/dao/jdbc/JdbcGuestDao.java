@@ -5,19 +5,29 @@ import di.Inject;
 import task_11.constants.SqlConstants;
 import task_11.db.dao.AbstractDao;
 import task_11.db.interfaces.GuestRepository;
+import task_11.db.interfaces.GuestServiceRepository;
 import task_11.db.interfaces.RoomRepository;
 import task_11.model.Guest;
+import task_11.model.Service;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * DAO для работы с гостями отеля.
+ * Предоставляет методы для CRUD операций и поиска гостей.
+ */
 @Component
 public class JdbcGuestDao extends AbstractDao<Guest> implements GuestRepository {
 
     @Inject
     private RoomRepository roomRepository;
+
+    @Inject
+    private GuestServiceRepository guestServiceRepository;
 
     @Override
     public Guest save(Guest guest) {
@@ -73,8 +83,18 @@ public class JdbcGuestDao extends AbstractDao<Guest> implements GuestRepository 
     }
 
     @Override
-    public void loadServicesForGuest(Guest guest) {}
+    public void loadServicesForGuest(Guest guest) {
+        if (guest.getId() != 0) {
+            List<Service> services = guestServiceRepository.findServicesByGuestId(guest.getId());
+            guest.setServices(services != null ? services : new ArrayList<>());
+        }
+    }
 
+    /**
+     * Преобразует ResultSet в объект Guest.
+     * @param rs ResultSet с данными гостя
+     * @return объект Guest
+     */
     private Guest mapGuest(ResultSet rs) throws SQLException {
         Guest guest = new Guest();
         guest.setId(rs.getLong("id"));

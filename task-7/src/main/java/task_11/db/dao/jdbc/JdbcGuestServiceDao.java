@@ -12,6 +12,10 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * DAO для работы со связями между гостями и услугами.
+ * Предоставляет методы для управления услугами, назначенными гостям.
+ */
 @Component
 public class JdbcGuestServiceDao extends BaseDao implements GuestServiceRepository {
 
@@ -35,6 +39,11 @@ public class JdbcGuestServiceDao extends BaseDao implements GuestServiceReposito
         return findMany(SqlConstants.SELECT_GUESTS_BY_SERVICE_ID, this::mapGuest, serviceId);
     }
 
+    /**
+     * Преобразует ResultSet в объект Service.
+     * @param rs ResultSet с данными услуги
+     * @return объект Service
+     */
     private Service mapService(ResultSet rs) throws SQLException {
         Service service = new Service();
         service.setId(rs.getLong("id"));
@@ -45,6 +54,11 @@ public class JdbcGuestServiceDao extends BaseDao implements GuestServiceReposito
         return service;
     }
 
+    /**
+     * Преобразует ResultSet в объект Guest.
+     * @param rs ResultSet с данными гостя
+     * @return объект Guest
+     */
     private Guest mapGuest(ResultSet rs) throws SQLException {
         Guest guest = new Guest();
         guest.setId(rs.getLong("id"));
@@ -54,5 +68,4 @@ public class JdbcGuestServiceDao extends BaseDao implements GuestServiceReposito
         guest.setRoomId(rs.getLong("room_id"));
         return guest;
     }
-
 }

@@ -9,4 +9,8 @@ public class GuestException extends HotelException {
     public GuestException(String message) {
         super(message);
     }
+
+    public GuestException(String message, Exception e) {
+        super(message, e);
+    }
 }

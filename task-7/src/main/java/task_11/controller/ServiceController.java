@@ -14,6 +14,7 @@ public class ServiceController implements IServiceController {
 
     @Inject
     private IServiceManager serviceManager;
+
     @Override
     public Service addService(Service service) {
         return serviceManager.addService(service);

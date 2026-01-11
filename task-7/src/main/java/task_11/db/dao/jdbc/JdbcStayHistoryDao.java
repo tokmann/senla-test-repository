@@ -7,6 +7,10 @@ import task_11.db.interfaces.StayHistoryRepository;
 
 import java.util.List;
 
+/**
+ * DAO для работы с историей проживания в комнатах отеля.
+ * Предоставляет методы для добавления, поиска и удаления записей истории.
+ */
 @Component
 public class JdbcStayHistoryDao extends BaseDao implements StayHistoryRepository {
 

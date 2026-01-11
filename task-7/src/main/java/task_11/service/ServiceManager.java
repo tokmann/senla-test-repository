@@ -5,6 +5,7 @@ import di.Inject;
 import task_11.db.TransactionManager;
 import task_11.exceptions.ValidationException;
 import task_11.exceptions.services.ServiceAlreadyExistsException;
+import task_11.exceptions.services.ServiceException;
 import task_11.exceptions.services.ServiceNotFoundException;
 import task_11.model.Service;
 
@@ -15,6 +16,10 @@ import task_11.view.enums.ServiceSortOption;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Менеджер для управления услугами отеля.
+ * Содержит бизнес-логику для добавления, изменения цен и получения списка услуг.
+ */
 @Component
 public class ServiceManager implements IServiceManager {
 
@@ -24,6 +29,11 @@ public class ServiceManager implements IServiceManager {
     @Inject
     private TransactionManager transactionManager;
 
+    /**
+     * Добавляет новую услугу в систему.
+     * @param service услуга для добавления
+     * @return добавленная услуга
+     */
     @Override
     public Service addService(Service service) {
         validateService(service);
@@ -41,17 +51,22 @@ public class ServiceManager implements IServiceManager {
             return savedService;
         } catch (Exception e) {
             transactionManager.rollbackTransaction();
-            throw e;
+            throw new ServiceException("Ошибка при добавлении услуги", e);
         }
     }
 
+    /**
+     * Изменяет цену услуги по её названию.
+     * @param serviceName название услуги
+     * @param newPrice новая цена
+     */
     @Override
     public void changeServicePrice(String serviceName, double newPrice) {
         if (serviceName == null || serviceName.trim().isEmpty()) {
-            throw new ValidationException("Service name cannot be empty");
+            throw new ValidationException("Название услуги не может быть пустым");
         }
         if (newPrice < 0) {
-            throw new ValidationException("Service price cannot be negative");
+            throw new ValidationException("Цена услуги не может быть отрицательной");
         }
 
         transactionManager.beginTransaction();
@@ -64,10 +79,16 @@ public class ServiceManager implements IServiceManager {
             transactionManager.commitTransaction();
         } catch (Exception e) {
             transactionManager.rollbackTransaction();
-            throw e;
+            throw new ServiceException("Ошибка при изменении цены услуги", e);
         }
     }
 
+    /**
+     * Возвращает список услуг, отсортированных по указанному критерию.
+     *
+     * @param option критерий сортировки
+     * @return отсортированный список услуг
+     */
     @Override
     public List<Service> getSortedServices(ServiceSortOption option) {
         return getAllServices().stream()
@@ -75,6 +96,11 @@ public class ServiceManager implements IServiceManager {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Возвращает список всех услуг.
+     *
+     * @return список всех услуг
+     */
     @Override
     public List<Service> getAllServices() {
         transactionManager.beginTransaction();
@@ -84,28 +110,43 @@ public class ServiceManager implements IServiceManager {
             return services;
         } catch (Exception e) {
             transactionManager.rollbackTransaction();
-            throw e;
+            throw new ServiceException("Ошибка при получении списка услуг", e);
         }
     }
 
+    /**
+     * Находит услугу по названию.
+     * @param name название услуги
+     * @return услуга или null, если не найдена
+     */
     @Override
     public Service findByName(String name) {
         if (name == null || name.trim().isEmpty()) {
-            throw new ValidationException("Service name cannot be empty");
+            throw new ValidationException("Название услуги не может быть пустым");
         }
+        System.out.println("[ServiceManager.findByName] Поиск услуги по названию: '" + name + "'");
 
-        transactionManager.beginTransaction();
         try {
             Service service = serviceRepository.findByName(name.trim())
                     .orElse(null);
-            transactionManager.commitTransaction();
+            if (service != null) {
+                System.out.println("[ServiceManager.findByName] Найдена услуга: " + service.getName() + " (ID: " + service.getId() + ")");
+            } else {
+                System.out.println("[ServiceManager.findByName] Услуга не найдена");
+            }
             return service;
         } catch (Exception e) {
-            transactionManager.rollbackTransaction();
-            throw e;
+            System.out.println("[ServiceManager.findByName] ОШИБКА при поиске услуги по названию: " + e.getMessage());
+            e.printStackTrace();
+            throw new ServiceException("Ошибка при поиске услуги по названию", e);
         }
     }
 
+    /**
+     * Возвращает услугу по её идентификатору.
+     * @param id идентификатор услуги
+     * @return Optional с услугой или пустой Optional, если услуга не найдена
+     */
     @Override
     public Optional<Service> getServiceById(long id) {
         transactionManager.beginTransaction();
@@ -115,16 +156,20 @@ public class ServiceManager implements IServiceManager {
             return service;
         } catch (Exception e) {
             transactionManager.rollbackTransaction();
-            throw e;
+            throw new ServiceNotFoundException("Ошибка при поиске услуги по ID");
         }
     }
 
+    /**
+     * Валидирует данные услуги перед сохранением.
+     * @param service услуга для валидации
+     */
     private void validateService(Service service) {
         if (service.getName() == null || service.getName().trim().isEmpty()) {
-            throw new ValidationException("Service name cannot be empty");
+            throw new ValidationException("Название услуги не может быть пустым");
         }
         if (service.getPrice() < 0) {
-            throw new ValidationException("Service price cannot be negative");
+            throw new ValidationException("Цена услуги не может быть отрицательной");
         }
     }
 }

@@ -302,13 +302,7 @@ public class ConsoleUI {
 
         try {
             int age = Integer.parseInt(ageInput);
-            Guest guest = new Guest();
-            guest.setFirstName(firstName);
-            guest.setSecondName(lastName);
-            guest.setAge(age);
-            guest.setRoomId(null);
-            guest.setServices(List.of());
-
+            Guest guest = new Guest(0, age, firstName, lastName, null, null, List.of());
             guestController.registerGuest(guest);
             consoleView.println("Гость зарегистрирован в системе: " + guest.getFullName() + " (ID: " + guest.getId() + ")");
         } catch (NumberFormatException e) {
@@ -751,7 +745,7 @@ public class ConsoleUI {
         String guestName = in.nextLine().trim();
 
         consoleView.println("Доступные услуги:");
-        List<Service> services = serviceManager.getSortedServices(ServiceSortOption.BY_NAME);
+        List<Service> services = serviceController.getServices(ServiceSortOption.BY_NAME);
         if (services.isEmpty()) {
             consoleView.println("Нет доступных услуг.");
             return;
