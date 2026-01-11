@@ -356,28 +356,6 @@ public class RoomManager implements IRoomManager {
     }
 
     /**
-     * Находит комнату по идентификатору.
-     * @param id идентификатор комнаты
-     * @return Optional с комнатой или пустой Optional, если комната не найдена
-     */
-    @Override
-    public Optional<Room> findRoomById(long id) {
-        transactionManager.beginTransaction();
-        try {
-            Optional<Room> roomOpt = roomRepository.findById(id);
-            roomOpt.ifPresent(room -> {
-                roomRepository.loadGuestsForRoom(room);
-                room.setStayHistory(stayHistoryRepository.findByRoomId(room.getId(), room.getHistorySize()));
-            });
-            transactionManager.commitTransaction();
-            return roomOpt;
-        } catch (Exception e) {
-            transactionManager.rollbackTransaction();
-            throw new RoomNotFoundException((long) id, e);
-        }
-    }
-
-    /**
      * Валидирует данные комнаты перед сохранением.
      * @param room комната для валидации
      */

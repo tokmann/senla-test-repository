@@ -73,16 +73,6 @@ public class JdbcRoomDao extends AbstractDao<Room> implements RoomRepository {
         return count(SqlConstants.COUNT_FREE_ROOMS);
     }
 
-    @Override
-    public void loadGuestsForRoom(Room room) {
-        // Загрузка гостей для комнаты выполняется в сервисном слое (чтобы избежать рекурсии)
-    }
-
-    @Override
-    public void loadHistoryForRoom(Room room) {
-        // Загрузка истории для комнаты выполняется в сервисном слое (чтобы избежать рекурсии)
-    }
-
     /**
      * Преобразует ResultSet в объект Room.
      * @param rs ResultSet с данными комнаты

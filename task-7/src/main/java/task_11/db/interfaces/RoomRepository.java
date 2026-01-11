@@ -7,6 +7,4 @@ import java.util.Optional;
 public interface RoomRepository extends BaseRepository<Room> {
     Optional<Room> findByNumber(int number);
     int countFree();
-    void loadGuestsForRoom(Room room);
-    void loadHistoryForRoom(Room room);
 }
