@@ -86,41 +86,30 @@ public class RoomManager implements IRoomManager {
     @Override
     public boolean checkIn(int roomNumber, List<Guest> guests, LocalDate checkInDate, LocalDate checkOutDate) {
         validateCheckIn(guests, checkInDate, checkOutDate);
-        System.out.println("[RoomManager.checkIn] Начало заселения " + guests.size() + " гостей в комнату " + roomNumber);
 
         try {
             Room room = roomRepository.findByNumber(roomNumber)
                     .orElseThrow(() -> new RoomNotFoundException(roomNumber));
-            System.out.println("[RoomManager.checkIn] Найдена комната: " + room.getNumber() +
-                    ", занята: " + room.isOccupied() +
-                    ", обслуживание: " + room.isUnderMaintenance() +
-                    ", вместимость: " + room.getCapacity());
 
             if (room.isUnderMaintenance() || room.isOccupied()) {
-                System.out.println("[RoomManager.checkIn] Комната недоступна для заселения");
                 return false;
             }
 
             if (guests.size() > room.getCapacity()) {
-                System.out.println("[RoomManager.checkIn] Превышена вместимость комнаты");
                 return false;
             }
 
             boolean success = room.checkIn(guests, checkInDate, checkOutDate);
             if (!success) {
-                System.out.println("[RoomManager.checkIn] Не удалось выполнить заселение в комнату");
                 return false;
             }
-            System.out.println("[RoomManager.checkIn] Успешно выполнен заселение в комнату");
 
             roomRepository.save(room);
-            System.out.println("[RoomManager.checkIn] Комнату сохранена в БД");
 
             for (Guest guest : guests) {
                 guest.setRoom(room);
                 guest.setRoomId(room.getId());
                 guestRepository.save(guest);
-                System.out.println("[RoomManager.checkIn] Гость сохранен: " + guest.getFullName() + " (ID: " + guest.getId() + ")");
             }
 
             String entry = String.format("Заселено %d гостей с %s по %s",
@@ -128,12 +117,9 @@ public class RoomManager implements IRoomManager {
                     checkInDate.format(DateTimeFormatter.ISO_LOCAL_DATE),
                     checkOutDate.format(DateTimeFormatter.ISO_LOCAL_DATE));
             stayHistoryRepository.addEntry(room.getId(), entry);
-            System.out.println("[RoomManager.checkIn] Добавлена запись в историю: " + entry);
 
-            System.out.println("[RoomManager.checkIn] Заселение успешно завершено");
             return true;
         } catch (Exception e) {
-            System.out.println("[RoomManager.checkIn] ОШИБКА при заселении гостей в комнату: " + e.getMessage());
             e.printStackTrace();
             throw new RoomException("Ошибка при заселении гостей в комнату", e);
         }
@@ -146,42 +132,32 @@ public class RoomManager implements IRoomManager {
      */
     @Override
     public boolean checkOut(int roomNumber) {
-        System.out.println("[RoomManager.checkOut] Начало выселения из комнаты " + roomNumber);
 
         try {
             Room room = roomRepository.findByNumber(roomNumber)
                     .orElseThrow(() -> new RoomNotFoundException(roomNumber));
-            System.out.println("[RoomManager.checkOut] Найдена комната: " + room.getNumber() +
-                    ", занята: " + room.isOccupied());
 
             if (!room.isOccupied()) {
-                System.out.println("[RoomManager.checkOut] Комната уже свободна");
                 return false;
             }
 
             List<Guest> guests = guestRepository.findByRoomId(room.getId());
-            System.out.println("[RoomManager.checkOut] Найдено гостей в комнате: " + guests.size());
 
             for (Guest guest : guests) {
                 guest.setRoom(null);
                 guest.setRoomId(null);
                 guestRepository.save(guest);
-                System.out.println("[RoomManager.checkOut] Обновлен гость: " + guest.getFullName() + " (ID: " + guest.getId() + ")");
             }
 
             room.checkOut();
             roomRepository.save(room);
-            System.out.println("[RoomManager.checkOut] Комнату обновлена как свободная");
 
             String entry = String.format("Выселены все гости %s",
                     LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE));
             stayHistoryRepository.addEntry(room.getId(), entry);
-            System.out.println("[RoomManager.checkOut] Добавлена запись в историю: " + entry);
 
-            System.out.println("[RoomManager.checkOut] Выселение успешно завершено");
             return true;
         } catch (Exception e) {
-            System.out.println("[RoomManager.checkOut] ОШИБКА при выселении гостей из комнаты: " + e.getMessage());
             e.printStackTrace();
             throw new RoomException("Ошибка при выселении гостей из комнаты", e);
         }

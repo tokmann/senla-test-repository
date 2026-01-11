@@ -124,19 +124,15 @@ public class ServiceManager implements IServiceManager {
         if (name == null || name.trim().isEmpty()) {
             throw new ValidationException("Название услуги не может быть пустым");
         }
-        System.out.println("[ServiceManager.findByName] Поиск услуги по названию: '" + name + "'");
 
         try {
             Service service = serviceRepository.findByName(name.trim())
                     .orElse(null);
             if (service != null) {
-                System.out.println("[ServiceManager.findByName] Найдена услуга: " + service.getName() + " (ID: " + service.getId() + ")");
             } else {
-                System.out.println("[ServiceManager.findByName] Услуга не найдена");
             }
             return service;
         } catch (Exception e) {
-            System.out.println("[ServiceManager.findByName] ОШИБКА при поиске услуги по названию: " + e.getMessage());
             e.printStackTrace();
             throw new ServiceException("Ошибка при поиске услуги по названию", e);
         }

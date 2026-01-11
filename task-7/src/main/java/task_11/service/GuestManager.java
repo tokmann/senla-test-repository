@@ -59,15 +59,12 @@ public class GuestManager implements IGuestManager {
      */
     @Override
     public void addGuest(Guest guest) {
-        System.out.println("[GuestManager.addGuest] Начало добавления гостя: " + guest.getFullName());
         transactionManager.beginTransaction();
         try {
             guestRepository.save(guest);
             transactionManager.commitTransaction();
-            System.out.println("[GuestManager.addGuest] Гость успешно добавлен: " + guest.getFullName() + " (ID: " + guest.getId() + ")");
         } catch (Exception e) {
             transactionManager.rollbackTransaction();
-            System.out.println("[GuestManager.addGuest] ОШИБКА при добавлении гостя: " + e.getMessage());
             e.printStackTrace();
             throw new GuestException("Ошибка при добавлении гостя", e);
         }
@@ -83,7 +80,6 @@ public class GuestManager implements IGuestManager {
         if (guest == null) {
             throw new ValidationException("Гость не может быть null");
         }
-        System.out.println("[GuestManager.removeGuest] Начало удаления гостя ID: " + guest.getId());
 
         transactionManager.beginTransaction();
         try {
@@ -97,10 +93,8 @@ public class GuestManager implements IGuestManager {
 
             guestRepository.delete(loadedGuest);
             transactionManager.commitTransaction();
-            System.out.println("[GuestManager.removeGuest] Гость успешно удален: " + loadedGuest.getFullName());
         } catch (Exception e) {
             transactionManager.rollbackTransaction();
-            System.out.println("[GuestManager.removeGuest] ОШИБКА при удалении гостя: " + e.getMessage());
             e.printStackTrace();
             throw new GuestException("Ошибка при удалении гостя", e);
         }
@@ -115,20 +109,14 @@ public class GuestManager implements IGuestManager {
         System.out.println("[GuestManager.getAllGuests] Начало получения всех гостей");
         try {
             List<Guest> guests = guestRepository.findAll();
-            System.out.println("[GuestManager.getAllGuests] Получено гостей из БД: " + guests.size());
 
             guests.forEach(guest -> {
                 guestRepository.loadRoomForGuest(guest);
                 guest.setServices(guestServiceRepository.findServicesByGuestId(guest.getId()));
-                System.out.println("[GuestManager.getAllGuests] Загружен гость: " + guest.getFullName() +
-                        ", комната: " + (guest.getRoom() != null ? guest.getRoom().getNumber() : "null") +
-                        ", услуг: " + guest.getServices().size());
             });
 
-            System.out.println("[GuestManager.getAllGuests] Успешно завершено, всего гостей: " + guests.size());
             return guests;
         } catch (Exception e) {
-            System.out.println("[GuestManager.getAllGuests] ОШИБКА при получении списка гостей: " + e.getMessage());
             e.printStackTrace();
             throw new GuestException("Ошибка при получении списка гостей", e);
         }
@@ -257,15 +245,12 @@ public class GuestManager implements IGuestManager {
      */
     @Override
     public void addServiceToGuest(long guestId, long serviceId) {
-        System.out.println("[GuestManager.addServiceToGuest] Начало добавления услуги ID: " + serviceId + " гостю ID: " + guestId);
         transactionManager.beginTransaction();
         try {
             guestServiceRepository.addServiceToGuest(guestId, serviceId);
             transactionManager.commitTransaction();
-            System.out.println("[GuestManager.addServiceToGuest] Услуга успешно добавлена гостю ID: " + guestId);
         } catch (Exception e) {
             transactionManager.rollbackTransaction();
-            System.out.println("[GuestManager.addServiceToGuest] ОШИБКА при добавлении услуги гостю: " + e.getMessage());
             e.printStackTrace();
             throw new ServiceException("Ошибка при добавлении услуги гостю", e);
         }
@@ -288,35 +273,28 @@ public class GuestManager implements IGuestManager {
             throw new ValidationException("Дата выселения должна быть после даты заселения");
         }
 
-        System.out.println("[GuestMgr.checkInGuest] Начало заселения гостя ID: " + guestId + " в комнату " + roomNumber);
         transactionManager.beginTransaction();
         try {
             Guest guest = guestRepository.findById(guestId)
                     .orElseThrow(() -> new GuestNotFoundException(guestId));
-            System.out.println("[GuestMgr.checkInGuest] Найден гость: " + guest.getFullName() + " (ID: " + guest.getId() + ")");
 
             guestRepository.loadRoomForGuest(guest);
 
             if (guest.getRoom() != null) {
-                System.out.println("[GuestMgr.checkInGuest] Гость уже заселен в комнату: " + guest.getRoom().getNumber());
                 throw new GuestAlreadyCheckedInException(guestId);
             }
 
-            System.out.println("[GuestMgr.checkInGuest] Вызов roomManager.checkIn для комнаты " + roomNumber);
             boolean result = roomManager.checkIn(roomNumber, List.of(guest), checkIn, checkOut);
 
             if (result) {
                 transactionManager.commitTransaction();
-                System.out.println("[GuestMgr.checkInGuest] Заселение успешно завершено");
                 return true;
             } else {
                 transactionManager.rollbackTransaction();
-                System.out.println("[GuestMgr.checkInGuest] Заселение не удалось, транзакция откачена");
                 return false;
             }
         } catch (Exception e) {
             transactionManager.rollbackTransaction();
-            System.out.println("[GuestMgr.checkInGuest] ОШИБКА при заселении гостя: " + e.getMessage());
             e.printStackTrace();
             throw new GuestException("Ошибка при заселении гостя", e);
         }
@@ -328,31 +306,25 @@ public class GuestManager implements IGuestManager {
      */
     @Override
     public void checkOutGuest(long guestId) {
-        System.out.println("[GuestManager.checkOutGuest] Начало выселения гостя ID: " + guestId);
         transactionManager.beginTransaction();
         try {
             Guest guest = guestRepository.findById(guestId)
                     .orElseThrow(() -> new GuestNotFoundException(guestId));
-            System.out.println("[GuestManager.checkOutGuest] Найден гость: " + guest.getFullName() + " (ID: " + guest.getId() + ")");
 
             guestRepository.loadRoomForGuest(guest);
 
             Room room = guest.getRoom();
             if (room == null) {
-                System.out.println("[GuestManager.checkOutGuest] Гость не заселен ни в одну комнату");
                 throw new GuestNotCheckedInException(guestId);
             }
-            System.out.println("[GuestManager.checkOutGuest] Гость заселен в комнату: " + room.getNumber());
 
             List<Guest> remainingGuests = guestRepository.findByRoomId(room.getId()).stream()
                     .filter(g -> g.getId() != guestId)
                     .collect(Collectors.toList());
 
             if (remainingGuests.isEmpty()) {
-                System.out.println("[GuestManager.checkOutGuest] Последний гость в комнате, выселение всей комнаты");
                 roomManager.checkOut(room.getNumber());
             } else {
-                System.out.println("[GuestManager.checkOutGuest] Есть другие гости в комнате, обновление только этого гостя");
                 guest.setRoom(null);
                 guest.setRoomId(null);
                 guestRepository.save(guest);
@@ -362,10 +334,8 @@ public class GuestManager implements IGuestManager {
             }
 
             transactionManager.commitTransaction();
-            System.out.println("[GuestManager.checkOutGuest] Выселение успешно завершено");
         } catch (Exception e) {
             transactionManager.rollbackTransaction();
-            System.out.println("[GuestManager.checkOutGuest] ОШИБКА при выселении гостя: " + e.getMessage());
             e.printStackTrace();
             throw new GuestException("Ошибка при выселении гостя", e);
         }
@@ -384,27 +354,20 @@ public class GuestManager implements IGuestManager {
         if (serviceName == null || serviceName.trim().isEmpty()) {
             throw new ValidationException("Название услуги не может быть пустым");
         }
-        System.out.println("[GuestManager.addServiceToGuestByName] Начало добавления услуги '" + serviceName + "' гостю '" + guestFullName + "'");
 
         try {
             Guest guest = findGuestByFullName(guestFullName);
             if (guest == null) {
-                System.out.println("[GuestManager.addServiceToGuestByName] Гость не найден: " + guestFullName);
                 throw new GuestNotFoundException(guestFullName);
             }
-            System.out.println("[GuestManager.addServiceToGuestByName] Найден гость: " + guest.getFullName() + " (ID: " + guest.getId() + ")");
 
             Service service = serviceManager.findByName(serviceName);
             if (service == null) {
-                System.out.println("[GuestManager.addServiceToGuestByName] Услуга не найдена: " + serviceName);
                 throw new ServiceNotFoundException(serviceName);
             }
-            System.out.println("[GuestManager.addServiceToGuestByName] Найдена услуга: " + service.getName() + " (ID: " + service.getId() + ")");
 
             addServiceToGuest(guest.getId(), service.getId());
-            System.out.println("[GuestManager.addServiceToGuestByName] Услуга успешно добавлена гостю");
         } catch (Exception e) {
-            System.out.println("[GuestManager.addServiceToGuestByName] ОШИБКА при добавлении услуги гостю: " + e.getMessage());
             e.printStackTrace();
             throw new ServiceException("Ошибка при добавлении услуги гостю", e);
         }
