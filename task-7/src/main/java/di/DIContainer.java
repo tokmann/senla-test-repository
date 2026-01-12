@@ -25,15 +25,6 @@ public class DIContainer {
         implRegistry.put(iface, impl);
     }
 
-    /**
-     * Получает экземпляр бина указанного типа.
-     * Если бин уже существует как синглтон, возвращает существующий экземпляр.
-     * В противном случае создает новый экземпляр с внедрением зависимостей.
-     * @param <T> тип возвращаемого бина
-     * @param type класс запрашиваемого типа
-     * @return экземпляр бина указанного типа
-     * @throws RuntimeException если не удалось создать или найти бин
-     */
     public <T> T getBean(Class<T> type) {
         try {
             Object bean = singletons.get(type);
@@ -46,25 +37,12 @@ public class DIContainer {
         }
     }
 
-    /**
-     * Определяет конкретную реализацию для запрашиваемого типа.
-     * @param type запрашиваемый тип (интерфейс или класс)
-     * @return конкретный класс реализации
-     * @throws RuntimeException если для интерфейса не найдена реализация
-     */
     private Class<?> resolveImplementation(Class<?> type) {
         if (implRegistry.containsKey(type)) return implRegistry.get(type);
         if (!type.isInterface()) return type;
         throw new RuntimeException("Нет имплементации для " + type.getName());
     }
 
-    /**
-     * Создает экземпляр бина с внедрением зависимостей.
-     * Обрабатывает поля, помеченные аннотацией @Inject.
-     * @param impl класс создаваемого бина
-     * @return созданный экземпляр бина
-     * @throws Exception если произошла ошибка при создании экземпляра или внедрении зависимостей
-     */
     private Object createBean(Class<?> impl) throws Exception {
         Object existing = singletons.get(impl);
         if (existing != null) return existing;
@@ -76,7 +54,16 @@ public class DIContainer {
         Object instance = impl.getDeclaredConstructor().newInstance();
         singletons.put(impl, instance);
 
-        for (Field field : impl.getDeclaredFields()) {
+        injectDependenciesRecursively(instance, impl);
+
+        return instance;
+    }
+
+    /**
+     * Рекурсивно внедряет зависимости во все поля класса и его суперклассов
+     */
+    private void injectDependenciesRecursively(Object instance, Class<?> clazz) throws Exception {
+        for (Field field : clazz.getDeclaredFields()) {
             if (field.isAnnotationPresent(Inject.class)) {
                 Class<?> fieldType = field.getType();
                 Object dep = getBean(fieldType);
@@ -85,7 +72,10 @@ public class DIContainer {
             }
         }
 
-        return instance;
+        Class<?> superClass = clazz.getSuperclass();
+        if (superClass != null && !superClass.equals(Object.class)) {
+            injectDependenciesRecursively(instance, superClass);
+        }
     }
 
 }
