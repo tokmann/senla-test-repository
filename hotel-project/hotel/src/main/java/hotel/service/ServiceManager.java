@@ -12,6 +12,8 @@ import hotel.model.Service;
 import hotel.db.interfaces.ServiceRepository;
 import hotel.service.interfaces.IServiceManager;
 import hotel.view.enums.ServiceSortOption;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -22,6 +24,8 @@ import java.util.stream.Collectors;
  */
 @Component
 public class ServiceManager implements IServiceManager {
+
+    private static final Logger log = LoggerFactory.getLogger(ServiceManager.class);
 
     @Inject
     private ServiceRepository serviceRepository;
@@ -36,6 +40,7 @@ public class ServiceManager implements IServiceManager {
      */
     @Override
     public Service addService(Service service) {
+        log.info("Начало обработки команды: addService, service={}", service);
         validateService(service);
 
         transactionManager.beginTransaction();
@@ -43,14 +48,17 @@ public class ServiceManager implements IServiceManager {
             Optional<Service> existing = serviceRepository.findByName(service.getName());
             if (existing.isPresent()) {
                 transactionManager.rollbackTransaction();
+                log.error("Ошибка выполнения команды: addService - услуга уже существует, name={}", service.getName());
                 throw new ServiceAlreadyExistsException(service.getName());
             }
 
             Service savedService = serviceRepository.save(service);
             transactionManager.commitTransaction();
+            log.info("Успешно выполнена команда: addService, service={}", savedService);
             return savedService;
         } catch (Exception e) {
             transactionManager.rollbackTransaction();
+            log.error("Ошибка выполнения команды: addService, service={}", service, e);
             throw new ServiceException("Ошибка при добавлении услуги", e);
         }
     }
@@ -62,10 +70,15 @@ public class ServiceManager implements IServiceManager {
      */
     @Override
     public void changeServicePrice(String serviceName, double newPrice) {
+        log.info("Начало обработки команды: changeServicePrice, serviceName={}, newPrice={}", serviceName, newPrice);
+
         if (serviceName == null || serviceName.trim().isEmpty()) {
+            log.error("Ошибка выполнения команды: changeServicePrice - пустое название услуги");
             throw new ValidationException("Название услуги не может быть пустым");
         }
         if (newPrice < 0) {
+            log.error("Ошибка выполнения команды: changeServicePrice - отрицательная цена, serviceName={}, newPrice={}",
+                    serviceName, newPrice);
             throw new ValidationException("Цена услуги не может быть отрицательной");
         }
 
@@ -77,8 +90,10 @@ public class ServiceManager implements IServiceManager {
             service.setPrice(newPrice);
             serviceRepository.save(service);
             transactionManager.commitTransaction();
+            log.info("Успешно выполнена команда: changeServicePrice, serviceName={}, newPrice={}", serviceName, newPrice);
         } catch (Exception e) {
             transactionManager.rollbackTransaction();
+            log.error("Ошибка выполнения команды: changeServicePrice, serviceName={}, newPrice={}", serviceName, newPrice, e);
             throw new ServiceException("Ошибка при изменении цены услуги", e);
         }
     }
@@ -91,9 +106,12 @@ public class ServiceManager implements IServiceManager {
      */
     @Override
     public List<Service> getSortedServices(ServiceSortOption option) {
-        return getAllServices().stream()
+        log.info("Начало обработки команды: getSortedServices, option={}", option);
+        List<Service> sorted = getAllServices().stream()
                 .sorted(option.getComparator())
                 .collect(Collectors.toList());
+        log.info("Успешно выполнена команда: getSortedServices, servicesCount={}", sorted.size());
+        return sorted;
     }
 
     /**
@@ -103,13 +121,17 @@ public class ServiceManager implements IServiceManager {
      */
     @Override
     public List<Service> getAllServices() {
+        log.info("Начало обработки команды: getAllServices");
+
         transactionManager.beginTransaction();
         try {
             List<Service> services = serviceRepository.findAll();
             transactionManager.commitTransaction();
+            log.info("Успешно выполнена команда: getAllServices, servicesCount={}", services.size());
             return services;
         } catch (Exception e) {
             transactionManager.rollbackTransaction();
+            log.error("Ошибка выполнения команды: getAllServices", e);
             throw new ServiceException("Ошибка при получении списка услуг", e);
         }
     }
@@ -121,7 +143,10 @@ public class ServiceManager implements IServiceManager {
      */
     @Override
     public Service findByName(String name) {
+        log.info("Начало обработки команды: findByName, name={}", name);
+
         if (name == null || name.trim().isEmpty()) {
+            log.error("Ошибка выполнения команды: findByName - пустое название услуги");
             throw new ValidationException("Название услуги не может быть пустым");
         }
 
@@ -129,11 +154,13 @@ public class ServiceManager implements IServiceManager {
             Service service = serviceRepository.findByName(name.trim())
                     .orElse(null);
             if (service != null) {
+                log.info("Успешно выполнена команда: findByName, service={}", service);
             } else {
+                log.info("Успешно выполнена команда: findByName, service не найден, name={}", name);
             }
             return service;
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Ошибка выполнения команды: findByName, name={}", name, e);
             throw new ServiceException("Ошибка при поиске услуги по названию", e);
         }
     }
@@ -145,13 +172,17 @@ public class ServiceManager implements IServiceManager {
      */
     @Override
     public Optional<Service> getServiceById(long id) {
+        log.info("Начало обработки команды: getServiceById, id={}", id);
+
         transactionManager.beginTransaction();
         try {
             Optional<Service> service = serviceRepository.findById(id);
             transactionManager.commitTransaction();
+            log.info("Успешно выполнена команда: getServiceById, id={}, found={}", id, service.isPresent());
             return service;
         } catch (Exception e) {
             transactionManager.rollbackTransaction();
+            log.error("Ошибка выполнения команды: getServiceById, id={}", id, e);
             throw new ServiceNotFoundException("Ошибка при поиске услуги по ID");
         }
     }

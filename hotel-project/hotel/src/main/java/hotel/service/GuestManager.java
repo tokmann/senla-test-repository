@@ -2,6 +2,7 @@ package hotel.service;
 
 import di.Component;
 import di.Inject;
+import hotel.controller.GuestController;
 import hotel.db.TransactionManager;
 import hotel.db.interfaces.GuestServiceRepository;
 import hotel.db.interfaces.RoomRepository;
@@ -21,6 +22,8 @@ import hotel.service.interfaces.IRoomManager;
 import hotel.service.interfaces.IServiceManager;
 import hotel.view.enums.GuestSortOption;
 import hotel.view.enums.ServiceSortOption;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -34,6 +37,8 @@ import java.util.stream.Collectors;
  */
 @Component
 public class GuestManager implements IGuestManager {
+
+    private static final Logger log = LoggerFactory.getLogger(GuestManager.class);
 
     @Inject
     private GuestRepository guestRepository;
@@ -59,13 +64,18 @@ public class GuestManager implements IGuestManager {
      */
     @Override
     public void addGuest(Guest guest) {
+        log.info("Начало обработки команды: addGuest, guest={}", guest);
+
         transactionManager.beginTransaction();
         try {
             guestRepository.save(guest);
             transactionManager.commitTransaction();
+
+            log.info("Успешно выполнена команда: addGuest, guest={}", guest);
+
         } catch (Exception e) {
             transactionManager.rollbackTransaction();
-            e.printStackTrace();
+            log.error("Ошибка выполнения команды: addGuest, guest={}", guest, e);
             throw new GuestException("Ошибка при добавлении гостя", e);
         }
     }
@@ -77,7 +87,10 @@ public class GuestManager implements IGuestManager {
      */
     @Override
     public void removeGuest(Guest guest) {
+        log.info("Начало обработки команды: removeGuest, guest={}", guest);
+
         if (guest == null) {
+            log.error("Ошибка выполнения команды: removeGuest - guest=null");
             throw new ValidationException("Гость не может быть null");
         }
 
@@ -93,9 +106,12 @@ public class GuestManager implements IGuestManager {
 
             guestRepository.delete(loadedGuest);
             transactionManager.commitTransaction();
+
+            log.info("Успешно выполнена команда: removeGuest, guest={}", guest);
+
         } catch (Exception e) {
             transactionManager.rollbackTransaction();
-            e.printStackTrace();
+            log.error("Ошибка выполнения команды: removeGuest, guest={}", guest, e);
             throw new GuestException("Ошибка при удалении гостя", e);
         }
     }
@@ -106,7 +122,8 @@ public class GuestManager implements IGuestManager {
      */
     @Override
     public List<Guest> getAllGuests() {
-        System.out.println("[GuestManager.getAllGuests] Начало получения всех гостей");
+        log.info("Начало обработки команды: getAllGuests");
+
         try {
             List<Guest> guests = guestRepository.findAll();
 
@@ -115,9 +132,11 @@ public class GuestManager implements IGuestManager {
                 guest.setServices(guestServiceRepository.findServicesByGuestId(guest.getId()));
             });
 
+            log.info("Успешно выполнена команда: getAllGuests, найдено={} гостей", guests.size());
             return guests;
+
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Ошибка выполнения команды: getAllGuests", e);
             throw new GuestException("Ошибка при получении списка гостей", e);
         }
     }
@@ -128,9 +147,12 @@ public class GuestManager implements IGuestManager {
      */
     @Override
     public List<Guest> getGuestsNotCheckedIn() {
-        return getAllGuests().stream()
+        log.info("Начало обработки команды: getGuestsNotCheckedIn");
+        List<Guest> guestsNotCheckedIn = getAllGuests().stream()
                 .filter(guest -> guest.getRoom() == null)
                 .collect(Collectors.toList());
+        log.info("Успешно выполнена команда: getGuestsNotCheckedIn, найдено={} гостей", guestsNotCheckedIn.size());
+        return guestsNotCheckedIn;
     }
 
     /**
@@ -139,9 +161,12 @@ public class GuestManager implements IGuestManager {
      */
     @Override
     public List<Guest> getGuestsCheckedIn() {
-        return getAllGuests().stream()
+        log.info("Начало обработки команды: getGuestsCheckedIn");
+        List<Guest> checkedInGuests = getAllGuests().stream()
                 .filter(guest -> guest.getRoom() != null)
                 .collect(Collectors.toList());
+        log.info("Успешно выполнена команда: getGuestsCheckedIn, найдено={} гостей", checkedInGuests.size());
+        return checkedInGuests;
     }
 
     /**
@@ -150,13 +175,19 @@ public class GuestManager implements IGuestManager {
      */
     @Override
     public int countGuests() {
+        log.info("Начало обработки команды: countGuests");
+
         transactionManager.beginTransaction();
         try {
             int count = guestRepository.count();
             transactionManager.commitTransaction();
+
+            log.info("Успешно выполнена команда: countGuests, count={}", count);
             return count;
+
         } catch (Exception e) {
             transactionManager.rollbackTransaction();
+            log.error("Ошибка выполнения команды: countGuests", e);
             throw new GuestException("Ошибка при подсчете количества гостей", e);
         }
     }
@@ -169,7 +200,10 @@ public class GuestManager implements IGuestManager {
      */
     @Override
     public List<Service> getSortedGuestServices(Guest guest, ServiceSortOption option) {
+        log.info("Начало обработки команды: getSortedGuestServices, guest={}, option={}", guest, option);
+
         if (guest == null) {
+            log.error("Ошибка выполнения команды: getSortedGuestServices - guest=null");
             throw new ValidationException("Гость не может быть null");
         }
 
@@ -177,11 +211,15 @@ public class GuestManager implements IGuestManager {
         try {
             List<Service> services = guestServiceRepository.findServicesByGuestId(guest.getId());
             transactionManager.commitTransaction();
-            return services.stream()
-                    .sorted(option.getComparator())
-                    .collect(Collectors.toList());
+
+            List<Service> sorted = services.stream().sorted(option.getComparator()).collect(Collectors.toList());
+            log.info("Успешно выполнена команда: getSortedGuestServices, guest={}, найдено услуг={}",
+                    guest, sorted.size());
+            return sorted;
+
         } catch (Exception e) {
             transactionManager.rollbackTransaction();
+            log.error("Ошибка выполнения команды: getSortedGuestServices, guest={}", guest, e);
             throw new ServiceException("Ошибка при получении отсортированных услуг гостя", e);
         }
     }
@@ -193,9 +231,12 @@ public class GuestManager implements IGuestManager {
      */
     @Override
     public List<Guest> getSortedGuests(GuestSortOption option) {
-        return getAllGuests().stream()
+        log.info("Начало обработки команды: getSortedGuests");
+        List<Guest> sortedGuests = getAllGuests().stream()
                 .sorted(option.getComparator())
                 .collect(Collectors.toList());
+        log.info("Успешно выполнена команда: getSortedGuests, найдено={} гостей", sortedGuests.size());
+        return sortedGuests;
     }
 
     /**
@@ -205,6 +246,8 @@ public class GuestManager implements IGuestManager {
      */
     @Override
     public Optional<Guest> getGuestById(long id) {
+        log.info("Начало обработки команды: getGuestById, id={}", id);
+
         transactionManager.beginTransaction();
         try {
             Optional<Guest> guestOpt = guestRepository.findById(id);
@@ -212,10 +255,14 @@ public class GuestManager implements IGuestManager {
                 guestRepository.loadRoomForGuest(guest);
                 guest.setServices(guestServiceRepository.findServicesByGuestId(guest.getId()));
             });
+
             transactionManager.commitTransaction();
+            log.info("Успешно выполнена команда: getGuestById, id={}, найден={}", id, guestOpt.isPresent());
             return guestOpt;
+
         } catch (Exception e) {
             transactionManager.rollbackTransaction();
+            log.error("Ошибка выполнения команды: getGuestById, id={}", id, e);
             throw new GuestException("Ошибка при получении гостя по ID", e);
         }
     }
@@ -227,15 +274,21 @@ public class GuestManager implements IGuestManager {
      */
     @Override
     public Guest findGuestByFullName(String fullName) {
+        log.info("Начало обработки команды: findGuestByFullName, fullName={}", fullName);
+
         if (fullName == null || fullName.trim().isEmpty()) {
+            log.error("Ошибка выполнения команды: findGuestByFullName - fullName пустое");
             throw new ValidationException("Полное имя гостя не может быть пустым");
         }
 
         String normalizedFullName = fullName.trim().toLowerCase();
-        return getAllGuests().stream()
-                .filter(guest -> guest.getFullName().toLowerCase().equals(normalizedFullName))
+        Guest guest = getAllGuests().stream()
+                .filter(g -> g.getFullName().toLowerCase().equals(normalizedFullName))
                 .findFirst()
                 .orElse(null);
+
+        log.info("Успешно выполнена команда: findGuestByFullName, fullName={}, найден={}", fullName, guest != null);
+        return guest;
     }
 
     /**
@@ -245,13 +298,18 @@ public class GuestManager implements IGuestManager {
      */
     @Override
     public void addServiceToGuest(long guestId, long serviceId) {
+        log.info("Начало обработки команды: addServiceToGuest, guestId={}, serviceId={}", guestId, serviceId);
+
         transactionManager.beginTransaction();
         try {
             guestServiceRepository.addServiceToGuest(guestId, serviceId);
             transactionManager.commitTransaction();
+
+            log.info("Успешно выполнена команда: addServiceToGuest, guestId={}, serviceId={}", guestId, serviceId);
+
         } catch (Exception e) {
             transactionManager.rollbackTransaction();
-            e.printStackTrace();
+            log.error("Ошибка выполнения команды: addServiceToGuest, guestId={}, serviceId={}", guestId, serviceId, e);
             throw new ServiceException("Ошибка при добавлении услуги гостю", e);
         }
     }
@@ -267,9 +325,11 @@ public class GuestManager implements IGuestManager {
     @Override
     public boolean checkInGuest(long guestId, int roomNumber, LocalDate checkIn, LocalDate checkOut) {
         if (checkIn == null || checkOut == null) {
+            log.error("Ошибка выполнения команды: checkInGuest - даты пустые");
             throw new ValidationException("Даты заселения и выселения не могут быть пустыми");
         }
         if (!checkOut.isAfter(checkIn)) {
+            log.error("Ошибка выполнения команды: checkInGuest - дата выселения до заселения");
             throw new ValidationException("Дата выселения должна быть после даты заселения");
         }
 
@@ -288,14 +348,17 @@ public class GuestManager implements IGuestManager {
 
             if (result) {
                 transactionManager.commitTransaction();
+                log.info("Успешно выполнена команда: checkInGuest, guestId={}, roomNumber={}", guestId, roomNumber);
                 return true;
             } else {
                 transactionManager.rollbackTransaction();
+                log.error("Ошибка выполнения команды: checkInGuest, guestId={}, roomNumber={} - заселение не удалось",
+                        guestId, roomNumber);
                 return false;
             }
         } catch (Exception e) {
             transactionManager.rollbackTransaction();
-            e.printStackTrace();
+            log.error("Ошибка выполнения команды: checkInGuest, guestId={}, roomNumber={}", guestId, roomNumber, e);
             throw new GuestException("Ошибка при заселении гостя", e);
         }
     }
@@ -306,6 +369,8 @@ public class GuestManager implements IGuestManager {
      */
     @Override
     public void checkOutGuest(long guestId) {
+        log.info("Начало обработки команды: checkOutGuest, guestId={}", guestId);
+
         transactionManager.beginTransaction();
         try {
             Guest guest = guestRepository.findById(guestId)
@@ -315,6 +380,7 @@ public class GuestManager implements IGuestManager {
 
             Room room = guest.getRoom();
             if (room == null) {
+                log.error("Ошибка выполнения команды: checkOutGuest - гость не заселен, guestId={}", guestId);
                 throw new GuestNotCheckedInException(guestId);
             }
 
@@ -334,9 +400,11 @@ public class GuestManager implements IGuestManager {
             }
 
             transactionManager.commitTransaction();
+            log.info("Успешно выполнена команда: checkOutGuest, guestId={}", guestId);
+
         } catch (Exception e) {
             transactionManager.rollbackTransaction();
-            e.printStackTrace();
+            log.error("Ошибка выполнения команды: checkOutGuest, guestId={}", guestId, e);
             throw new GuestException("Ошибка при выселении гостя", e);
         }
     }
@@ -348,27 +416,38 @@ public class GuestManager implements IGuestManager {
      */
     @Override
     public void addServiceToGuestByName(String guestFullName, String serviceName) {
+        log.info("Начало обработки команды: addServiceToGuestByName, guestFullName={}, serviceName={}",
+                guestFullName, serviceName);
+
         if (guestFullName == null || guestFullName.trim().isEmpty()) {
+            log.error("Ошибка выполнения команды: addServiceToGuestByName - guestFullName пустое");
             throw new ValidationException("Полное имя гостя не может быть пустым");
         }
         if (serviceName == null || serviceName.trim().isEmpty()) {
+            log.error("Ошибка выполнения команды: addServiceToGuestByName - serviceName пустое");
             throw new ValidationException("Название услуги не может быть пустым");
         }
 
         try {
             Guest guest = findGuestByFullName(guestFullName);
             if (guest == null) {
+                log.error("Ошибка выполнения команды: addServiceToGuestByName - гость не найден, guestFullName={}", guestFullName);
                 throw new GuestNotFoundException(guestFullName);
             }
 
             Service service = serviceManager.findByName(serviceName);
             if (service == null) {
+                log.error("Ошибка выполнения команды: addServiceToGuestByName - услуга не найдена, serviceName={}", serviceName);
                 throw new ServiceNotFoundException(serviceName);
             }
 
             addServiceToGuest(guest.getId(), service.getId());
+            log.info("Успешно выполнена команда: addServiceToGuestByName, guestFullName={}, serviceName={}",
+                    guestFullName, serviceName);
+
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Ошибка выполнения команды: addServiceToGuestByName, guestFullName={}, serviceName={}",
+                    guestFullName, serviceName, e);
             throw new ServiceException("Ошибка при добавлении услуги гостю", e);
         }
     }
