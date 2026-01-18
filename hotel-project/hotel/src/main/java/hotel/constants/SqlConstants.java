@@ -1,6 +1,6 @@
 package hotel.constants;
 
-public class SqlConstants {
+public final class SqlConstants {
     // room
     public static final String INSERT_ROOM = "INSERT INTO room (number, capacity, price, stars, history_size) VALUES (?, ?, ?, ?, ?)";
     public static final String UPDATE_ROOM = "UPDATE room SET number = ?, capacity = ?, price = ?, stars = ?, is_occupied = ?, under_maintenance = ?, status_change_enabled = ?, history_size = ?, check_in_date = ?, check_out_date = ? WHERE id = ?";
@@ -38,6 +38,5 @@ public class SqlConstants {
     public static final String SELECT_HISTORY_BY_ROOM_ID = "SELECT history_entry FROM stay_history WHERE room_id = ? ORDER BY id DESC LIMIT ?";
     public static final String DELETE_HISTORY_BY_ROOM_ID = "DELETE FROM stay_history WHERE room_id = ?";
 
-    private SqlConstants() {}
-
+    private SqlConstants() { }
 }

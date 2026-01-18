@@ -8,7 +8,7 @@ import hotel.controller.interfaces.IServiceController;
 import hotel.exceptions.ValidationException;
 import hotel.exceptions.guests.GuestNotCheckedInException;
 import hotel.exceptions.guests.GuestNotFoundException;
-import hotel.exceptions.rooms.*;
+import hotel.exceptions.rooms.RoomNotFoundException;
 import hotel.exceptions.services.ServiceAlreadyExistsException;
 import hotel.exceptions.services.ServiceNotFoundException;
 import hotel.model.Guest;
@@ -76,7 +76,7 @@ public class ConsoleUI {
 
         while (running) {
             consoleView.println("""
-                    
+
                     ===== Главное меню =====
                     1 — Гости
                     2 — Комнаты
@@ -109,7 +109,7 @@ public class ConsoleUI {
 
         while (!back) {
             consoleView.println("""
-                
+
                 ===== Меню гостей =====
                 1 — Зарегистрировать гостя
                 2 — Показать всех гостей
@@ -165,7 +165,7 @@ public class ConsoleUI {
 
         while (!back) {
             consoleView.println("""
-                    
+
                     ===== Меню комнат =====
                     1 — Показать все номера
                     2 — Показать свободные номера
@@ -217,7 +217,7 @@ public class ConsoleUI {
 
         while (!back) {
             consoleView.println("""
-                    
+
                     ===== Меню услуг =====
                     1 — Показать все услуги
                     2 — Добавить услугу

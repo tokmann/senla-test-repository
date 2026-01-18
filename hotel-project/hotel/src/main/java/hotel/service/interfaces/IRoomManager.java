@@ -24,5 +24,4 @@ public interface IRoomManager {
     List<Room> findRoomsThatWillBeFree(LocalDate date);
     double fullRoomPrice(Room room);
     List<String> getRoomHistory(int roomNumber);
-
 }

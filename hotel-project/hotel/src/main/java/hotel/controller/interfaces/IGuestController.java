@@ -19,5 +19,4 @@ public interface IGuestController {
     List<Service> getGuestServices(Guest guest, ServiceSortOption option);
     int countGuests();
     void addServiceToGuestByName(String guestFullName, String serviceName);
-
 }

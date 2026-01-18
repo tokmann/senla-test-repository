@@ -5,11 +5,11 @@ package hotel.view.factory;
  * Реализует паттерн Singleton.
  * Позволяет централизованно управлять типом интерфейса без изменения бизнес-логики.
  */
-public class UIFactoryProvider  {
+public final class UIFactoryProvider  {
 
     private static UIFactory instance;
 
-    private UIFactoryProvider() {}
+    private UIFactoryProvider() { }
 
     public static UIFactory getInstance() {
         if (instance == null) {

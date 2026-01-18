@@ -38,6 +38,4 @@ public class ConsoleView {
     public <T> void println(T obj) {
         System.out.println(obj);
     }
-
-
 }

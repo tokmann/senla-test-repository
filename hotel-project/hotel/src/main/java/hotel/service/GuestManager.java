@@ -2,7 +2,6 @@ package hotel.service;
 
 import di.Component;
 import di.Inject;
-import hotel.controller.GuestController;
 import hotel.db.TransactionManager;
 import hotel.db.interfaces.GuestServiceRepository;
 import hotel.db.interfaces.RoomRepository;
@@ -72,7 +71,6 @@ public class GuestManager implements IGuestManager {
             transactionManager.commitTransaction();
 
             log.info("Успешно выполнена команда: addGuest, guest={}", guest);
-
         } catch (Exception e) {
             transactionManager.rollbackTransaction();
             log.error("Ошибка выполнения команды: addGuest, guest={}", guest, e);
@@ -108,7 +106,6 @@ public class GuestManager implements IGuestManager {
             transactionManager.commitTransaction();
 
             log.info("Успешно выполнена команда: removeGuest, guest={}", guest);
-
         } catch (Exception e) {
             transactionManager.rollbackTransaction();
             log.error("Ошибка выполнения команды: removeGuest, guest={}", guest, e);
@@ -134,7 +131,6 @@ public class GuestManager implements IGuestManager {
 
             log.info("Успешно выполнена команда: getAllGuests, найдено={} гостей", guests.size());
             return guests;
-
         } catch (Exception e) {
             log.error("Ошибка выполнения команды: getAllGuests", e);
             throw new GuestException("Ошибка при получении списка гостей", e);
@@ -184,7 +180,6 @@ public class GuestManager implements IGuestManager {
 
             log.info("Успешно выполнена команда: countGuests, count={}", count);
             return count;
-
         } catch (Exception e) {
             transactionManager.rollbackTransaction();
             log.error("Ошибка выполнения команды: countGuests", e);
@@ -216,7 +211,6 @@ public class GuestManager implements IGuestManager {
             log.info("Успешно выполнена команда: getSortedGuestServices, guest={}, найдено услуг={}",
                     guest, sorted.size());
             return sorted;
-
         } catch (Exception e) {
             transactionManager.rollbackTransaction();
             log.error("Ошибка выполнения команды: getSortedGuestServices, guest={}", guest, e);
@@ -259,7 +253,6 @@ public class GuestManager implements IGuestManager {
             transactionManager.commitTransaction();
             log.info("Успешно выполнена команда: getGuestById, id={}, найден={}", id, guestOpt.isPresent());
             return guestOpt;
-
         } catch (Exception e) {
             transactionManager.rollbackTransaction();
             log.error("Ошибка выполнения команды: getGuestById, id={}", id, e);
@@ -306,7 +299,6 @@ public class GuestManager implements IGuestManager {
             transactionManager.commitTransaction();
 
             log.info("Успешно выполнена команда: addServiceToGuest, guestId={}, serviceId={}", guestId, serviceId);
-
         } catch (Exception e) {
             transactionManager.rollbackTransaction();
             log.error("Ошибка выполнения команды: addServiceToGuest, guestId={}, serviceId={}", guestId, serviceId, e);
@@ -401,7 +393,6 @@ public class GuestManager implements IGuestManager {
 
             transactionManager.commitTransaction();
             log.info("Успешно выполнена команда: checkOutGuest, guestId={}", guestId);
-
         } catch (Exception e) {
             transactionManager.rollbackTransaction();
             log.error("Ошибка выполнения команды: checkOutGuest, guestId={}", guestId, e);
@@ -444,7 +435,6 @@ public class GuestManager implements IGuestManager {
             addServiceToGuest(guest.getId(), service.getId());
             log.info("Успешно выполнена команда: addServiceToGuestByName, guestFullName={}, serviceName={}",
                     guestFullName, serviceName);
-
         } catch (Exception e) {
             log.error("Ошибка выполнения команды: addServiceToGuestByName, guestFullName={}, serviceName={}",
                     guestFullName, serviceName, e);
