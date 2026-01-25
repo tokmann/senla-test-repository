@@ -46,15 +46,16 @@ public class ServiceManager implements IServiceManager {
 
         transactionManager.beginTransaction();
         try {
-            Optional<Service> existing = serviceRepository.findByName(service.getName());
-            if (existing.isPresent()) {
+            Optional<Service> existingService = serviceRepository.findByName(service.getName());
+            if (existingService.isPresent()) {
                 transactionManager.rollbackTransaction();
-                log.error("Ошибка выполнения команды: addService - услуга уже существует, name={}", service.getName());
+                log.error("Ошибка выполнения команды: addService - услуга с названием {} уже существует", service.getName());
                 throw new ServiceAlreadyExistsException(service.getName());
             }
 
             Service savedService = serviceRepository.save(service);
             transactionManager.commitTransaction();
+
             log.info("Успешно выполнена команда: addService, service={}", savedService);
             return savedService;
         } catch (Exception e) {
@@ -85,11 +86,17 @@ public class ServiceManager implements IServiceManager {
 
         transactionManager.beginTransaction();
         try {
-            Service service = serviceRepository.findByName(serviceName)
-                    .orElseThrow(() -> new ServiceNotFoundException(serviceName));
+            Optional<Service> serviceOpt = serviceRepository.findByName(serviceName);
+            if (!serviceOpt.isPresent()) {
+                transactionManager.rollbackTransaction();
+                log.error("Ошибка выполнения команды: changeServicePrice - услуга не найдена, serviceName={}", serviceName);
+                throw new ServiceNotFoundException(serviceName);
+            }
 
+            Service service = serviceOpt.get();
             service.setPrice(newPrice);
             serviceRepository.save(service);
+
             transactionManager.commitTransaction();
             log.info("Успешно выполнена команда: changeServicePrice, serviceName={}, newPrice={}", serviceName, newPrice);
         } catch (Exception e) {
@@ -108,11 +115,19 @@ public class ServiceManager implements IServiceManager {
     @Override
     public List<Service> getSortedServices(ServiceSortOption option) {
         log.info("Начало обработки команды: getSortedServices, option={}", option);
-        List<Service> sorted = getAllServices().stream()
-                .sorted(option.getComparator())
-                .collect(Collectors.toList());
-        log.info("Успешно выполнена команда: getSortedServices, servicesCount={}", sorted.size());
-        return sorted;
+
+        try {
+            List<Service> services = getAllServices();
+            List<Service> sortedServices = services.stream()
+                    .sorted(option.getComparator())
+                    .collect(Collectors.toList());
+
+            log.info("Успешно выполнена команда: getSortedServices, servicesCount={}", sortedServices.size());
+            return sortedServices;
+        } catch (Exception e) {
+            log.error("Ошибка выполнения команды: getSortedServices, option={}", option, e);
+            throw new ServiceException("Ошибка при сортировке услуг", e);
+        }
     }
 
     /**
@@ -124,14 +139,11 @@ public class ServiceManager implements IServiceManager {
     public List<Service> getAllServices() {
         log.info("Начало обработки команды: getAllServices");
 
-        transactionManager.beginTransaction();
         try {
             List<Service> services = serviceRepository.findAll();
-            transactionManager.commitTransaction();
             log.info("Успешно выполнена команда: getAllServices, servicesCount={}", services.size());
             return services;
         } catch (Exception e) {
-            transactionManager.rollbackTransaction();
             log.error("Ошибка выполнения команды: getAllServices", e);
             throw new ServiceException("Ошибка при получении списка услуг", e);
         }
@@ -152,14 +164,14 @@ public class ServiceManager implements IServiceManager {
         }
 
         try {
-            Service service = serviceRepository.findByName(name.trim())
-                    .orElse(null);
-            if (service != null) {
-                log.info("Успешно выполнена команда: findByName, service={}", service);
+            Optional<Service> serviceOpt = serviceRepository.findByName(name.trim());
+            if (serviceOpt.isPresent()) {
+                log.info("Успешно выполнена команда: findByName, service={}", serviceOpt.get());
+                return serviceOpt.get();
             } else {
                 log.info("Успешно выполнена команда: findByName, service не найден, name={}", name);
+                return null;
             }
-            return service;
         } catch (Exception e) {
             log.error("Ошибка выполнения команды: findByName, name={}", name, e);
             throw new ServiceException("Ошибка при поиске услуги по названию", e);
@@ -175,14 +187,11 @@ public class ServiceManager implements IServiceManager {
     public Optional<Service> getServiceById(long id) {
         log.info("Начало обработки команды: getServiceById, id={}", id);
 
-        transactionManager.beginTransaction();
         try {
             Optional<Service> service = serviceRepository.findById(id);
-            transactionManager.commitTransaction();
             log.info("Успешно выполнена команда: getServiceById, id={}, found={}", id, service.isPresent());
             return service;
         } catch (Exception e) {
-            transactionManager.rollbackTransaction();
             log.error("Ошибка выполнения команды: getServiceById, id={}", id, e);
             throw new ServiceNotFoundException("Ошибка при поиске услуги по ID");
         }

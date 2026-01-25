@@ -302,7 +302,7 @@ public class ConsoleUI {
 
         try {
             int age = Integer.parseInt(ageInput);
-            Guest guest = new Guest(0, age, firstName, lastName, null, null, List.of());
+            Guest guest = new Guest(0L, age, firstName, lastName, null, null);
             guestController.registerGuest(guest);
             consoleView.println("Гость зарегистрирован в системе: " + guest.getFullName() + " (ID: " + guest.getId() + ")");
         } catch (NumberFormatException e) {

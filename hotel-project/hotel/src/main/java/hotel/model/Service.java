@@ -1,30 +1,53 @@
 package hotel.model;
 
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.Table;
+
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 /**
  * Модель дополнительной услуги отеля.
  */
+@Entity
+@Table(name = "services")
 public class Service {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
+
+    @Column(name = "name", nullable = false, length = 100, unique = true)
     private String name;
+
+    @Column(name = "description", length = 500)
     private String description;
+
+    @Column(name = "price", nullable = false)
     private double price;
+
+    @Column(name = "date")
     private LocalDate date;
-    private long guestId;
 
-    public Service() {
-    }
+    @ManyToMany(mappedBy = "services")
+    private List<Guest> guests = new ArrayList<>();
 
-    public Service(long id, String name, String description, double price, LocalDate date, long guestId) {
+    public Service() {}
+
+    public Service(long id, String name, String description, double price, LocalDate date) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.price = price;
         this.date = date;
-        this.guestId = guestId;
     }
 
     public long getId() {
@@ -67,12 +90,15 @@ public class Service {
         this.date = date;
     }
 
-    public long getGuestId() {
-        return guestId;
+    public List<Guest> getGuests() {
+        if (guests == null) {
+            guests = new ArrayList<>();
+        }
+        return guests;
     }
 
-    public void setGuestId(long guestId) {
-        this.guestId = guestId;
+    public void setGuests(List<Guest> guests) {
+        this.guests = guests != null ? new ArrayList<>(guests) : new ArrayList<>();
     }
 
     @Override
