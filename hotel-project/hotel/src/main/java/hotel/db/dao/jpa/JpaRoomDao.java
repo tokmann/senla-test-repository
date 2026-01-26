@@ -2,6 +2,7 @@ package hotel.db.dao.jpa;
 
 import di.Component;
 import di.Inject;
+import hotel.constants.JpaQueryConstants;
 import hotel.db.EntityManagerContext;
 import hotel.db.TransactionManager;
 import hotel.db.interfaces.RoomRepository;
@@ -59,8 +60,10 @@ public class JpaRoomDao implements RoomRepository {
     @Override
     public List<Room> findAll() {
         try {
-            String jpql = "SELECT r FROM Room r";
-            return getEntityManager().createQuery(jpql, Room.class).getResultList();
+            return getEntityManager().createQuery(
+                    JpaQueryConstants.SELECT_ALL_ROOMS,
+                    Room.class
+            ).getResultList();
         } catch (Exception e) {
             log.error("Ошибка при получении списка комнат", e);
             throw new RoomException("Ошибка при получении списка комнат", e);
@@ -81,9 +84,10 @@ public class JpaRoomDao implements RoomRepository {
     @Override
     public Optional<Room> findByNumber(int number) {
         try {
-            String jpql = "SELECT r FROM Room r WHERE r.number = :number";
-            List<Room> rooms = getEntityManager().createQuery(jpql, Room.class)
-                    .setParameter("number", number)
+            List<Room> rooms = getEntityManager().createQuery(
+                            JpaQueryConstants.SELECT_ROOM_BY_NUMBER,
+                            Room.class
+                    ).setParameter(JpaQueryConstants.PARAM_NUMBER, number)
                     .getResultList();
             return rooms.isEmpty() ? Optional.empty() : Optional.of(rooms.get(0));
         } catch (Exception e) {
@@ -95,8 +99,10 @@ public class JpaRoomDao implements RoomRepository {
     @Override
     public int countFree() {
         try {
-            String jpql = "SELECT COUNT(r) FROM Room r WHERE r.isOccupied = false AND r.underMaintenance = false";
-            return Math.toIntExact(getEntityManager().createQuery(jpql, Long.class).getSingleResult());
+            return Math.toIntExact(getEntityManager().createQuery(
+                    JpaQueryConstants.COUNT_FREE_ROOMS,
+                    Long.class
+            ).getSingleResult());
         } catch (Exception e) {
             log.error("Ошибка при подсчете свободных комнат", e);
             throw new RoomException("Ошибка при подсчете свободных комнат", e);

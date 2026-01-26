@@ -2,8 +2,8 @@ package hotel.db.dao.jpa;
 
 import di.Component;
 import di.Inject;
+import hotel.constants.JpaQueryConstants;
 import hotel.db.EntityManagerContext;
-import hotel.db.TransactionManager;
 import hotel.db.interfaces.GuestRepository;
 import hotel.exceptions.guests.GuestException;
 import hotel.model.Guest;
@@ -76,8 +76,10 @@ public class JpaGuestDao implements GuestRepository {
     @Override
     public List<Guest> findAll() {
         try {
-            String jpql = "SELECT g FROM Guest g LEFT JOIN FETCH g.services LEFT JOIN FETCH g.room";
-            return getEntityManager().createQuery(jpql, Guest.class).getResultList();
+            return getEntityManager().createQuery(
+                    JpaQueryConstants.SELECT_ALL_GUESTS_WITH_SERVICES_AND_ROOM,
+                    Guest.class
+            ).getResultList();
         } catch (Exception e) {
             log.error("Ошибка при получении списка гостей", e);
             throw new GuestException("Ошибка при получении списка гостей", e);
@@ -87,9 +89,10 @@ public class JpaGuestDao implements GuestRepository {
     @Override
     public List<Guest> findByRoomId(long roomId) {
         try {
-            String jpql = "SELECT g FROM Guest g WHERE g.room.id = :roomId";
-            return getEntityManager().createQuery(jpql, Guest.class)
-                    .setParameter("roomId", roomId)
+            return getEntityManager().createQuery(
+                            JpaQueryConstants.SELECT_GUESTS_BY_ROOM_ID,
+                            Guest.class
+                    ).setParameter(JpaQueryConstants.PARAM_ROOM_ID, roomId)
                     .getResultList();
         } catch (Exception e) {
             log.error("Ошибка при поиске гостей по ID комнаты: {}", roomId, e);
@@ -100,8 +103,10 @@ public class JpaGuestDao implements GuestRepository {
     @Override
     public int count() {
         try {
-            String jpql = "SELECT COUNT(g) FROM Guest g";
-            return Math.toIntExact(getEntityManager().createQuery(jpql, Long.class).getSingleResult());
+            return Math.toIntExact(getEntityManager().createQuery(
+                    JpaQueryConstants.COUNT_ALL_GUESTS,
+                    Long.class
+            ).getSingleResult());
         } catch (Exception e) {
             log.error("Ошибка при подсчете количества гостей", e);
             throw new GuestException("Ошибка при подсчете количества гостей", e);

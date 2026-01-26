@@ -70,7 +70,7 @@ public class App {
             ConsoleUI ui = container.getBean(ConsoleUI.class);
 
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                System.out.println("Закрытие соединения с базой данных...");
+                System.out.println("Закрытие соединения с базой данных.");
 
                 EntityManagerFactoryProvider emfProvider = container.getBean(EntityManagerFactoryProvider.class);
                 if (emfProvider != null) {
@@ -82,7 +82,7 @@ public class App {
 
             ui.run();
         } catch (RuntimeException e) {
-            System.err.println("Критическая ошибка при запуске приложения: " + e.getMessage());
+            System.err.println("Ошибка при запуске приложения: " + e.getMessage());
             e.printStackTrace();
             System.exit(1);
         }

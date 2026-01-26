@@ -2,6 +2,7 @@ package hotel.db.dao.jpa;
 
 import di.Component;
 import di.Inject;
+import hotel.constants.JpaQueryConstants;
 import hotel.db.EntityManagerContext;
 import hotel.db.TransactionManager;
 import hotel.db.interfaces.ServiceRepository;
@@ -59,8 +60,10 @@ public class JpaServiceDao implements ServiceRepository {
     @Override
     public List<Service> findAll() {
         try {
-            String jpql = "SELECT s FROM Service s";
-            return getEntityManager().createQuery(jpql, Service.class).getResultList();
+            return getEntityManager().createQuery(
+                    JpaQueryConstants.SELECT_ALL_SERVICES,
+                    Service.class
+            ).getResultList();
         } catch (Exception e) {
             log.error("Ошибка при получении списка услуг", e);
             throw new ServiceException("Ошибка при получении списка услуг", e);
@@ -81,9 +84,10 @@ public class JpaServiceDao implements ServiceRepository {
     @Override
     public Optional<Service> findByName(String name) {
         try {
-            String jpql = "SELECT s FROM Service s WHERE s.name = :name";
-            List<Service> services = getEntityManager().createQuery(jpql, Service.class)
-                    .setParameter("name", name)
+            List<Service> services = getEntityManager().createQuery(
+                            JpaQueryConstants.SELECT_SERVICE_BY_NAME,
+                            Service.class
+                    ).setParameter(JpaQueryConstants.PARAM_NAME, name)
                     .getResultList();
             return services.isEmpty() ? Optional.empty() : Optional.of(services.get(0));
         } catch (Exception e) {

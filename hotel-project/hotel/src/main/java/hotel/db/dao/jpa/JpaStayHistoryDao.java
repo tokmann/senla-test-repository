@@ -2,6 +2,7 @@ package hotel.db.dao.jpa;
 
 import di.Component;
 import di.Inject;
+import hotel.constants.JpaQueryConstants;
 import hotel.db.EntityManagerContext;
 import hotel.db.TransactionManager;
 import hotel.db.interfaces.StayHistoryRepository;
@@ -51,9 +52,10 @@ public class JpaStayHistoryDao implements StayHistoryRepository {
     @Override
     public List<String> findByRoomId(long roomId, int limit) {
         try {
-            String jpql = "SELECT h.entry FROM StayHistory h WHERE h.room.id = :roomId ORDER BY h.entryDate DESC";
-            return getEntityManager().createQuery(jpql, String.class)
-                    .setParameter("roomId", roomId)
+            return getEntityManager().createQuery(
+                            JpaQueryConstants.SELECT_HISTORY_ENTRIES_BY_ROOM_ID,
+                            String.class
+                    ).setParameter(JpaQueryConstants.PARAM_ROOM_ID, roomId)
                     .setMaxResults(limit)
                     .getResultList();
         } catch (Exception e) {
@@ -65,12 +67,10 @@ public class JpaStayHistoryDao implements StayHistoryRepository {
     @Override
     public void deleteByRoomId(long roomId) {
         try {
-            String jpql = "DELETE FROM StayHistory h WHERE h.room.id = :roomId";
-            getEntityManager().createQuery(jpql)
-                    .setParameter("roomId", roomId)
+            getEntityManager().createQuery(
+                            JpaQueryConstants.DELETE_HISTORY_BY_ROOM_ID
+                    ).setParameter(JpaQueryConstants.PARAM_ROOM_ID, roomId)
                     .executeUpdate();
-
-            log.info("История для комнаты ID {} успешно удалена", roomId);
         } catch (Exception e) {
             log.error("Ошибка при удалении истории для комнаты ID {}", roomId, e);
             throw new RoomException("Ошибка при удалении истории для комнаты ID " + roomId, e);
@@ -80,12 +80,10 @@ public class JpaStayHistoryDao implements StayHistoryRepository {
     @Override
     public void deleteOldestEntryForRoom(long roomId) {
         try {
-            String jpql = "DELETE FROM StayHistory h WHERE h.id = (SELECT MIN(h2.id) FROM StayHistory h2 WHERE h2.room.id = :roomId)";
-            getEntityManager().createQuery(jpql)
-                    .setParameter("roomId", roomId)
+            getEntityManager().createQuery(
+                            JpaQueryConstants.DELETE_OLDEST_HISTORY_ENTRY_BY_ROOM_ID
+                    ).setParameter(JpaQueryConstants.PARAM_ROOM_ID, roomId)
                     .executeUpdate();
-
-            log.info("Самая старая запись истории для комнаты ID {} успешно удалена", roomId);
         } catch (Exception e) {
             log.error("Ошибка при удалении самой старой записи истории для комнаты ID {}", roomId, e);
             throw new RoomException("Ошибка при удалении самой старой записи истории для комнаты ID " + roomId, e);
