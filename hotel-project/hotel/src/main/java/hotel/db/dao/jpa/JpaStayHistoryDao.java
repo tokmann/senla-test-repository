@@ -21,9 +21,6 @@ public class JpaStayHistoryDao implements StayHistoryRepository {
     private static final Logger log = LoggerFactory.getLogger(JpaStayHistoryDao.class);
 
     @Inject
-    private TransactionManager transactionManager;
-
-    @Inject
     private EntityManagerContext entityManagerContext;
 
     private EntityManager getEntityManager() {
@@ -32,7 +29,6 @@ public class JpaStayHistoryDao implements StayHistoryRepository {
 
     @Override
     public void addEntry(long roomId, String entry) {
-        transactionManager.beginTransaction();
         try {
             Room room = getEntityManager().find(Room.class, roomId);
             if (room == null) {
@@ -45,10 +41,8 @@ public class JpaStayHistoryDao implements StayHistoryRepository {
 
             getEntityManager().persist(history);
 
-            transactionManager.commitTransaction();
             log.info("Добавлена запись в историю для комнаты ID {}", roomId);
         } catch (Exception e) {
-            transactionManager.rollbackTransaction();
             log.error("Ошибка при добавлении записи в историю для комнаты ID {}", roomId, e);
             throw new RoomException("Ошибка при добавлении записи в историю для комнаты ID " + roomId, e);
         }
@@ -70,17 +64,14 @@ public class JpaStayHistoryDao implements StayHistoryRepository {
 
     @Override
     public void deleteByRoomId(long roomId) {
-        transactionManager.beginTransaction();
         try {
             String jpql = "DELETE FROM StayHistory h WHERE h.room.id = :roomId";
             getEntityManager().createQuery(jpql)
                     .setParameter("roomId", roomId)
                     .executeUpdate();
 
-            transactionManager.commitTransaction();
             log.info("История для комнаты ID {} успешно удалена", roomId);
         } catch (Exception e) {
-            transactionManager.rollbackTransaction();
             log.error("Ошибка при удалении истории для комнаты ID {}", roomId, e);
             throw new RoomException("Ошибка при удалении истории для комнаты ID " + roomId, e);
         }
@@ -88,17 +79,14 @@ public class JpaStayHistoryDao implements StayHistoryRepository {
 
     @Override
     public void deleteOldestEntryForRoom(long roomId) {
-        transactionManager.beginTransaction();
         try {
             String jpql = "DELETE FROM StayHistory h WHERE h.id = (SELECT MIN(h2.id) FROM StayHistory h2 WHERE h2.room.id = :roomId)";
             getEntityManager().createQuery(jpql)
                     .setParameter("roomId", roomId)
                     .executeUpdate();
 
-            transactionManager.commitTransaction();
             log.info("Самая старая запись истории для комнаты ID {} успешно удалена", roomId);
         } catch (Exception e) {
-            transactionManager.rollbackTransaction();
             log.error("Ошибка при удалении самой старой записи истории для комнаты ID {}", roomId, e);
             throw new RoomException("Ошибка при удалении самой старой записи истории для комнаты ID " + roomId, e);
         }

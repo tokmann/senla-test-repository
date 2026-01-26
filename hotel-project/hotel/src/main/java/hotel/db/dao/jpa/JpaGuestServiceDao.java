@@ -24,9 +24,6 @@ public class JpaGuestServiceDao implements GuestServiceRepository {
     private static final Logger log = LoggerFactory.getLogger(JpaGuestServiceDao.class);
 
     @Inject
-    private TransactionManager transactionManager;
-
-    @Inject
     private EntityManagerContext entityManagerContext;
 
     private EntityManager getEntityManager() {
@@ -35,7 +32,6 @@ public class JpaGuestServiceDao implements GuestServiceRepository {
 
     @Override
     public void addServiceToGuest(long guestId, long serviceId) {
-        transactionManager.beginTransaction();
         try {
             Guest guest = getEntityManager().find(Guest.class, guestId);
             Service service = getEntityManager().find(Service.class, serviceId);
@@ -57,11 +53,8 @@ public class JpaGuestServiceDao implements GuestServiceRepository {
 
             getEntityManager().merge(guest);
             getEntityManager().merge(service);
-
-            transactionManager.commitTransaction();
             log.info("Услуга ID {} успешно добавлена гостю ID {}", serviceId, guestId);
         } catch (Exception e) {
-            transactionManager.rollbackTransaction();
             log.error("Ошибка при добавлении услуги ID {} гостю ID {}", serviceId, guestId, e);
             throw new ServiceException("Ошибка при добавлении услуги гостю", e);
         }
@@ -69,7 +62,6 @@ public class JpaGuestServiceDao implements GuestServiceRepository {
 
     @Override
     public void removeServiceFromGuest(long guestId, long serviceId) {
-        transactionManager.beginTransaction();
         try {
             Guest guest = getEntityManager().find(Guest.class, guestId);
             Service service = getEntityManager().find(Service.class, serviceId);
@@ -88,10 +80,8 @@ public class JpaGuestServiceDao implements GuestServiceRepository {
             getEntityManager().merge(guest);
             getEntityManager().merge(service);
 
-            transactionManager.commitTransaction();
             log.info("Услуга ID {} успешно удалена у гостя ID {}", serviceId, guestId);
         } catch (Exception e) {
-            transactionManager.rollbackTransaction();
             log.error("Ошибка при удалении услуги ID {} у гостя ID {}", serviceId, guestId, e);
             throw new ServiceException("Ошибка при удалении услуги у гостя", e);
         }

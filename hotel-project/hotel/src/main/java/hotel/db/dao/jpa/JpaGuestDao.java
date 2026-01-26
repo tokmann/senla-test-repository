@@ -20,9 +20,6 @@ public class JpaGuestDao implements GuestRepository {
     private static final Logger log = LoggerFactory.getLogger(JpaGuestDao.class);
 
     @Inject
-    private TransactionManager transactionManager;
-
-    @Inject
     private EntityManagerContext entityManagerContext;
 
     private EntityManager getEntityManager() {
@@ -31,7 +28,6 @@ public class JpaGuestDao implements GuestRepository {
 
     @Override
     public Guest save(Guest guest) {
-        transactionManager.beginTransaction();
         try {
             EntityManager em = getEntityManager();
             if (guest.getId() == 0) {
@@ -39,10 +35,8 @@ public class JpaGuestDao implements GuestRepository {
             } else {
                 guest = em.merge(guest);
             }
-            transactionManager.commitTransaction();
             return guest;
         } catch (Exception e) {
-            transactionManager.rollbackTransaction();
             log.error("Ошибка при сохранении гостя", e);
             throw new GuestException("Ошибка при сохранении гостя", e);
         }
@@ -50,16 +44,13 @@ public class JpaGuestDao implements GuestRepository {
 
     @Override
     public void delete(Guest guest) {
-        transactionManager.beginTransaction();
         try {
             EntityManager em = getEntityManager();
             Guest managedGuest = em.find(Guest.class, guest.getId());
             if (managedGuest != null) {
                 em.remove(managedGuest);
             }
-            transactionManager.commitTransaction();
         } catch (Exception e) {
-            transactionManager.rollbackTransaction();
             log.error("Ошибка при удалении гостя", e);
             throw new GuestException("Ошибка при удалении гостя", e);
         }

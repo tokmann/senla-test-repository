@@ -23,6 +23,8 @@ public class TransactionManager {
         if (!transaction.isActive()) {
             transaction.begin();
             log.debug("Транзакция начата");
+        } else {
+            log.debug("Используется существующая транзакция");
         }
     }
 

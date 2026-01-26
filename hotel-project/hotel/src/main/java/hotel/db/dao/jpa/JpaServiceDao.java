@@ -20,9 +20,6 @@ public class JpaServiceDao implements ServiceRepository {
     private static final Logger log = LoggerFactory.getLogger(JpaServiceDao.class);
 
     @Inject
-    private TransactionManager transactionManager;
-
-    @Inject
     private EntityManagerContext entityManagerContext;
 
     private EntityManager getEntityManager() {
@@ -31,7 +28,6 @@ public class JpaServiceDao implements ServiceRepository {
 
     @Override
     public Service save(Service service) {
-        transactionManager.beginTransaction();
         try {
             EntityManager em = getEntityManager();
             if (service.getId() == 0) {
@@ -39,10 +35,8 @@ public class JpaServiceDao implements ServiceRepository {
             } else {
                 service = em.merge(service);
             }
-            transactionManager.commitTransaction();
             return service;
         } catch (Exception e) {
-            transactionManager.rollbackTransaction();
             log.error("Ошибка при сохранении услуги", e);
             throw new ServiceException("Ошибка при сохранении услуги", e);
         }
@@ -50,16 +44,13 @@ public class JpaServiceDao implements ServiceRepository {
 
     @Override
     public void delete(Service service) {
-        transactionManager.beginTransaction();
         try {
             EntityManager em = getEntityManager();
             Service managedService = em.find(Service.class, service.getId());
             if (managedService != null) {
                 em.remove(managedService);
             }
-            transactionManager.commitTransaction();
         } catch (Exception e) {
-            transactionManager.rollbackTransaction();
             log.error("Ошибка при удалении услуги", e);
             throw new ServiceException("Ошибка при удалении услуги", e);
         }

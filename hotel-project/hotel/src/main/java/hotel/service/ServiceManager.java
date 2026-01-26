@@ -55,7 +55,6 @@ public class ServiceManager implements IServiceManager {
 
             Service savedService = serviceRepository.save(service);
             transactionManager.commitTransaction();
-
             log.info("Успешно выполнена команда: addService, service={}", savedService);
             return savedService;
         } catch (Exception e) {
@@ -121,7 +120,6 @@ public class ServiceManager implements IServiceManager {
             List<Service> sortedServices = services.stream()
                     .sorted(option.getComparator())
                     .collect(Collectors.toList());
-
             log.info("Успешно выполнена команда: getSortedServices, servicesCount={}", sortedServices.size());
             return sortedServices;
         } catch (Exception e) {

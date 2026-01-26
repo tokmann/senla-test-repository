@@ -20,9 +20,6 @@ public class JpaRoomDao implements RoomRepository {
     private static final Logger log = LoggerFactory.getLogger(JpaRoomDao.class);
 
     @Inject
-    private TransactionManager transactionManager;
-
-    @Inject
     private EntityManagerContext entityManagerContext;
 
     private EntityManager getEntityManager() {
@@ -31,7 +28,6 @@ public class JpaRoomDao implements RoomRepository {
 
     @Override
     public Room save(Room room) {
-        transactionManager.beginTransaction();
         try {
             EntityManager em = getEntityManager();
             if (room.getId() == 0) {
@@ -39,10 +35,8 @@ public class JpaRoomDao implements RoomRepository {
             } else {
                 room = em.merge(room);
             }
-            transactionManager.commitTransaction();
             return room;
         } catch (Exception e) {
-            transactionManager.rollbackTransaction();
             log.error("Ошибка при сохранении комнаты", e);
             throw new RoomException("Ошибка при сохранении комнаты", e);
         }
@@ -50,16 +44,13 @@ public class JpaRoomDao implements RoomRepository {
 
     @Override
     public void delete(Room room) {
-        transactionManager.beginTransaction();
         try {
             EntityManager em = getEntityManager();
             Room managedRoom = em.find(Room.class, room.getId());
             if (managedRoom != null) {
                 em.remove(managedRoom);
             }
-            transactionManager.commitTransaction();
         } catch (Exception e) {
-            transactionManager.rollbackTransaction();
             log.error("Ошибка при удалении комнаты", e);
             throw new RoomException("Ошибка при удалении комнаты", e);
         }
