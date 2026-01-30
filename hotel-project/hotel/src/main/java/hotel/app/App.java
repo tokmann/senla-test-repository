@@ -7,13 +7,14 @@ import hotel.controller.ServiceController;
 import hotel.controller.interfaces.IGuestController;
 import hotel.controller.interfaces.IRoomController;
 import hotel.controller.interfaces.IServiceController;
-import hotel.db.ConnectionProvider;
+import hotel.db.EntityManagerContext;
+import hotel.db.EntityManagerFactoryProvider;
 import hotel.db.TransactionManager;
-import hotel.db.dao.jdbc.JdbcGuestDao;
-import hotel.db.dao.jdbc.JdbcGuestServiceDao;
-import hotel.db.dao.jdbc.JdbcRoomDao;
-import hotel.db.dao.jdbc.JdbcServiceDao;
-import hotel.db.dao.jdbc.JdbcStayHistoryDao;
+import hotel.db.dao.jpa.JpaGuestDao;
+import hotel.db.dao.jpa.JpaGuestServiceDao;
+import hotel.db.dao.jpa.JpaRoomDao;
+import hotel.db.dao.jpa.JpaServiceDao;
+import hotel.db.dao.jpa.JpaStayHistoryDao;
 import hotel.db.interfaces.GuestRepository;
 import hotel.db.interfaces.GuestServiceRepository;
 import hotel.db.interfaces.RoomRepository;
@@ -26,7 +27,9 @@ import hotel.service.interfaces.IGuestManager;
 import hotel.service.interfaces.IRoomManager;
 import hotel.service.interfaces.IServiceManager;
 import hotel.ui.ConsoleUI;
+import hotel.util.RoomConfigurationService;
 import hotel.view.ConsoleView;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 
 /**
  * Главный класс консольного приложения отеля.
@@ -40,8 +43,11 @@ public class App {
     public static void main(String[] args) {
         DIContainer container = new DIContainer();
 
+        container.register(EntityManagerFactoryProvider.class, EntityManagerFactoryProvider.class);
+        container.register(EntityManagerContext.class, EntityManagerContext.class);
         container.register(TransactionManager.class, TransactionManager.class);
-        container.register(ConnectionProvider.class, ConnectionProvider.class);
+
+        container.register(RoomConfigurationService.class, RoomConfigurationService.class);
 
         container.register(IGuestManager.class, GuestManager.class);
         container.register(IRoomManager.class, RoomManager.class);
@@ -51,11 +57,11 @@ public class App {
         container.register(IRoomController.class, RoomController.class);
         container.register(IServiceController.class, ServiceController.class);
 
-        container.register(GuestRepository.class, JdbcGuestDao.class);
-        container.register(RoomRepository.class, JdbcRoomDao.class);
-        container.register(ServiceRepository.class, JdbcServiceDao.class);
-        container.register(GuestServiceRepository.class, JdbcGuestServiceDao.class);
-        container.register(StayHistoryRepository.class, JdbcStayHistoryDao.class);
+        container.register(GuestRepository.class, JpaGuestDao.class);
+        container.register(RoomRepository.class, JpaRoomDao.class);
+        container.register(ServiceRepository.class, JpaServiceDao.class);
+        container.register(GuestServiceRepository.class, JpaGuestServiceDao.class);
+        container.register(StayHistoryRepository.class, JpaStayHistoryDao.class);
 
         container.register(ConsoleView.class, ConsoleView.class);
         container.register(ConsoleUI.class, ConsoleUI.class);
@@ -64,15 +70,19 @@ public class App {
             ConsoleUI ui = container.getBean(ConsoleUI.class);
 
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                System.out.println("Закрытие соединения с базой данных.");
 
-                System.out.println("Закрытие соединения с базой данных...");
-                ConnectionProvider.getInstance().close();
+                EntityManagerFactoryProvider emfProvider = container.getBean(EntityManagerFactoryProvider.class);
+                if (emfProvider != null) {
+                    emfProvider.close();
+                }
+
                 System.out.println("Приложение завершено корректно.");
             }));
 
             ui.run();
         } catch (RuntimeException e) {
-            System.err.println("Критическая ошибка при запуске приложения: " + e.getMessage());
+            System.err.println("Ошибка при запуске приложения: " + e.getMessage());
             e.printStackTrace();
             System.exit(1);
         }

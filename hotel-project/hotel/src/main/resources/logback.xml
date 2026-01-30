@@ -15,6 +15,12 @@
         </encoder>
     </appender>
 
+    <logger name="org.hibernate.SQL" level="warn" />
+    <logger name="org.hibernate.type.descriptor.sql" level="warn" />
+    <logger name="org.hibernate.orm.jdbc.bind" level="warn" />
+
+    <logger name="org.hibernate.tool.schema" level="warn" />
+
     <root level="info">
         <appender-ref ref="STDOUT"/>
         <appender-ref ref="FILE"/>

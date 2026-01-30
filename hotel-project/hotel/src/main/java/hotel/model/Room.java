@@ -1,8 +1,14 @@
 package hotel.model;
 
-import config.AnnotationConfigurationLoader;
-import config.ConfigProperty;
-import config.ConfigType;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -14,30 +20,53 @@ import java.util.stream.Collectors;
  * Модель номера в отеле.
  * Хранит данные о состоянии номера, проживающих гостях и истории заселений.
  */
+@Entity
+@Table(name = "rooms")
 public class Room {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
+
+    @Column(name = "number", unique = true, nullable = false)
     private int number;
+
+    @Column(name = "capacity", nullable = false)
     private int capacity;
+
+    @Column(name = "price", nullable = false)
     private double price;
+
+    @Column(name = "stars", nullable = false)
     private int stars;
+
+    @Column(name = "is_occupied")
     private boolean isOccupied;
+
+    @Column(name = "under_maintenance")
     private boolean underMaintenance;
 
-    @ConfigProperty(propertyName = "room.status.change.enabled", type = ConfigType.BOOLEAN)
+    @Column(name = "status_change_enabled")
     private boolean statusChangeEnabled;
 
-    private List<Guest> guests;
-    private List<String> stayHistory;
-
-    @ConfigProperty(propertyName = "room.history.size", type = ConfigType.INTEGER)
+    @Column(name = "history_size")
     private int historySize;
 
+    @Column(name = "check_in_date")
     private LocalDate checkInDate;
+
+    @Column(name = "check_out_date")
     private LocalDate checkOutDate;
 
-    // No-arg constructor
+    @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Guest> guests = new ArrayList<>();
+
+    @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    private List<StayHistory> stayHistory = new ArrayList<>();
+
     public Room() {
+        this.statusChangeEnabled = true;
+        this.historySize = 10;
         this.guests = new ArrayList<>();
         this.stayHistory = new ArrayList<>();
     }
@@ -50,9 +79,10 @@ public class Room {
         this.stars = stars;
         this.isOccupied = false;
         this.underMaintenance = false;
+        this.statusChangeEnabled = true;
+        this.historySize = 10;
         this.guests = new ArrayList<>();
         this.stayHistory = new ArrayList<>();
-        AnnotationConfigurationLoader.configure(this);
     }
 
     public long getId() {
@@ -111,14 +141,6 @@ public class Room {
         this.underMaintenance = underMaintenance;
     }
 
-    public boolean isStatusChangeEnabled() {
-        return statusChangeEnabled;
-    }
-
-    public void setStatusChangeEnabled(boolean statusChangeEnabled) {
-        this.statusChangeEnabled = statusChangeEnabled;
-    }
-
     public List<Guest> getGuests() {
         if (guests == null) {
             guests = new ArrayList<>();
@@ -131,11 +153,9 @@ public class Room {
     }
 
     public List<String> getStayHistory() {
-        return new ArrayList<>(stayHistory); // Defensive copy
-    }
-
-    public void setStayHistory(List<String> stayHistory) {
-        this.stayHistory = stayHistory != null ? new ArrayList<>(stayHistory) : new ArrayList<>();
+        return stayHistory.stream()
+                .map(StayHistory::getEntry)
+                .collect(Collectors.toList());
     }
 
     public int getHistorySize() {
@@ -173,34 +193,33 @@ public class Room {
         if (underMaintenance) return false;
         int availableSpots = capacity - guests.size();
         if (newGuests.size() > availableSpots) return false;
-        for (Guest guest : newGuests) {
-            guest.setRoomId(this.id);
-            guest.setRoom(this);
-        }
+
         guests.addAll(newGuests);
         this.isOccupied = true;
         this.checkInDate = checkInDate;
         this.checkOutDate = checkOutDate;
+
         String guestNames = newGuests.stream()
                 .map(Guest::getFullName)
                 .collect(Collectors.joining(", "));
-        stayHistory.add("Гости: " + guestNames + " проживали с " + checkInDate + " по " + checkOutDate);
+        String entry = "Гости: " + guestNames + " проживали с " + checkInDate + " по " + checkOutDate;
+
+        stayHistory.add(new StayHistory(this, entry));
         while (stayHistory.size() > historySize) {
             stayHistory.remove(0);
         }
+
         return true;
     }
 
     public List<String> getLastStays() {
-        return new ArrayList<>(stayHistory);
+        return stayHistory.stream()
+                .map(StayHistory::getEntry)
+                .collect(Collectors.toList());
     }
 
     public void checkOut() {
         this.isOccupied = false;
-        for (Guest guest : guests) {
-            guest.setRoomId(null);
-            guest.setRoom(null);
-        }
         this.guests.clear();
         clearOccupationTime();
     }

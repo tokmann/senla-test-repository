@@ -3,21 +3,24 @@ package hotel.service;
 import di.Component;
 import di.Inject;
 import hotel.db.TransactionManager;
-import hotel.db.interfaces.GuestRepository;
-import hotel.db.interfaces.StayHistoryRepository;
+import hotel.db.dao.jpa.JpaGuestDao;
+import hotel.db.dao.jpa.JpaRoomDao;
+import hotel.db.dao.jpa.JpaStayHistoryDao;
 import hotel.exceptions.ValidationException;
 import hotel.exceptions.rooms.RoomException;
 import hotel.exceptions.rooms.RoomNotFoundException;
 import hotel.model.Guest;
 import hotel.model.Room;
-import hotel.db.interfaces.RoomRepository;
 import hotel.service.interfaces.IRoomManager;
+import hotel.util.RoomConfigurationService;
 import hotel.view.enums.RoomSortOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -33,16 +36,19 @@ public class RoomManager implements IRoomManager {
     private static final Logger log = LoggerFactory.getLogger(RoomManager.class);
 
     @Inject
-    private RoomRepository roomRepository;
+    private JpaRoomDao roomRepository;
 
     @Inject
-    private GuestRepository guestRepository;
+    private JpaGuestDao guestRepository;
 
     @Inject
-    private StayHistoryRepository stayHistoryRepository;
+    private JpaStayHistoryDao stayHistoryRepository;
 
     @Inject
     private TransactionManager transactionManager;
+
+    @Inject
+    private  RoomConfigurationService roomConfig;
 
     /**
      * Добавляет новую комнату в систему.
@@ -56,18 +62,8 @@ public class RoomManager implements IRoomManager {
 
         transactionManager.beginTransaction();
         try {
-            if (room.getId() != 0) {
-                Optional<Room> existing = roomRepository.findById(room.getId());
-                if (existing.isPresent()) {
-                    updateExistingRoom(existing.get(), room);
-                    transactionManager.commitTransaction();
-                    log.info("Успешно выполнена команда: addRoom - обновлена существующая комната, roomId={}", room.getId());
-                    return true;
-                }
-            }
-
-            Optional<Room> existingByNumber = roomRepository.findByNumber(room.getNumber());
-            if (existingByNumber.isPresent()) {
+            Optional<Room> existingRoom = roomRepository.findByNumber(room.getNumber());
+            if (existingRoom.isPresent()) {
                 transactionManager.rollbackTransaction();
                 log.error("Ошибка выполнения команды: addRoom - комната с номером {} уже существует", room.getNumber());
                 return false;
@@ -94,48 +90,78 @@ public class RoomManager implements IRoomManager {
      */
     @Override
     public boolean checkIn(int roomNumber, List<Guest> guests, LocalDate checkInDate, LocalDate checkOutDate) {
-        log.info("Начало обработки команды: checkIn, roomNumber={}, guests={}, checkIn={}, checkOut={}",
-                roomNumber, guests, checkInDate, checkOutDate);
+        transactionManager.beginTransaction();
+        try {
+            boolean result = checkInInternal(roomNumber, guests, checkInDate, checkOutDate);
+            if (result) {
+                transactionManager.commitTransaction();
+                log.info("Успешно выполнена команда: checkIn, roomNumber={}, guestsCount={}", roomNumber, guests.size());
+                return true;
+            } else {
+                transactionManager.rollbackTransaction();
+                return false;
+            }
+        } catch (Exception e) {
+            transactionManager.rollbackTransaction();
+            throw e;
+        }
+    }
+
+    /**
+     * Вспомогательный метода для избегания вложенной транзакции.
+     * @param roomNumber номер комнаты
+     */
+    @Override
+    public boolean checkInInternal(int roomNumber, List<Guest> guests, LocalDate checkInDate, LocalDate checkOutDate) {
+        log.info("Начало обработки команды: checkInInternal, roomNumber={}, guestsCount={}, checkIn={}, checkOut={}",
+                roomNumber, guests.size(), checkInDate, checkOutDate);
         validateCheckIn(guests, checkInDate, checkOutDate);
 
         try {
-            Room room = roomRepository.findByNumber(roomNumber)
-                    .orElseThrow(() -> new RoomNotFoundException(roomNumber));
+            Optional<Room> roomOpt = roomRepository.findByNumber(roomNumber);
+            if (!roomOpt.isPresent()) {
+                log.error("Ошибка выполнения команды: checkInInternal - комната {} не найдена", roomNumber);
+                throw new RoomNotFoundException(roomNumber);
+            }
 
-            if (room.isUnderMaintenance() || room.isOccupied()) {
-                log.error("Ошибка выполнения команды: checkIn - комната {} занята или на обслуживании", roomNumber);
+            Room room = roomOpt.get();
+
+            if (room.isUnderMaintenance()) {
+                log.error("Ошибка выполнения команды: checkInInternal - комната {} на обслуживании", roomNumber);
+                return false;
+            }
+
+            if (room.isOccupied()) {
+                log.error("Ошибка выполнения команды: checkInInternal - комната {} уже занята", roomNumber);
                 return false;
             }
 
             if (guests.size() > room.getCapacity()) {
-                log.error("Ошибка выполнения команды: checkIn - превышена вместимость комнаты {}", roomNumber);
+                log.error("Ошибка выполнения команды: checkInInternal - превышена вместимость комнаты {}. Текущая вместимость {}, попытка заселить {} гостей",
+                        roomNumber, room.getCapacity(), guests.size());
                 return false;
             }
-
-            boolean success = room.checkIn(guests, checkInDate, checkOutDate);
-            if (!success) {
-                log.error("Ошибка выполнения команды: checkIn - не удалось заселить гостей в комнату {}", roomNumber);
-                return false;
-            }
-
-            roomRepository.save(room);
 
             for (Guest guest : guests) {
                 guest.setRoom(room);
-                guest.setRoomId(room.getId());
-                guestRepository.save(guest);
             }
 
-            String entry = String.format("Заселено %d гостей с %s по %s",
-                    guests.size(),
-                    checkInDate.format(DateTimeFormatter.ISO_LOCAL_DATE),
-                    checkOutDate.format(DateTimeFormatter.ISO_LOCAL_DATE));
+            room.setGuests(guests);
+            room.setOccupied(true);
+            room.setCheckInDate(checkInDate);
+            room.setCheckOutDate(checkOutDate);
+
+            roomRepository.save(room);
+
+            String guestNames = guests.stream()
+                    .map(Guest::getFullName)
+                    .collect(Collectors.joining(", "));
+            String entry = "Гости: " + guestNames + " проживали с " + checkInDate + " по " + checkOutDate;
             stayHistoryRepository.addEntry(room.getId(), entry);
 
-            log.info("Успешно выполнена команда: checkIn, roomNumber={}, guestsCount={}", roomNumber, guests.size());
             return true;
         } catch (Exception e) {
-            log.error("Ошибка выполнения команды: checkIn, roomNumber={}", roomNumber, e);
+            log.error("Ошибка выполнения команды: checkInInternal, roomNumber={}", roomNumber, e);
             throw new RoomException("Ошибка при заселении гостей в комнату", e);
         }
     }
@@ -147,37 +173,96 @@ public class RoomManager implements IRoomManager {
      */
     @Override
     public boolean checkOut(int roomNumber) {
-        log.info("Начало обработки команды: checkOut, roomNumber={}", roomNumber);
+        transactionManager.beginTransaction();
+        try {
+            boolean result = checkOutInternal(roomNumber);
+            if (result) {
+                transactionManager.commitTransaction();
+                log.info("Успешно выполнена команда: checkOut, roomNumber={}", roomNumber);
+                return true;
+            } else {
+                transactionManager.rollbackTransaction();
+                return false;
+            }
+        } catch (Exception e) {
+            transactionManager.rollbackTransaction();
+            throw e;
+        }
+    }
+
+    /**
+     * Вспомогательный метода для избегания вложенной транзакции.
+     * @param roomNumber номер комнаты
+     */
+    @Override
+    public boolean checkOutInternal(int roomNumber, Long guestIdToRemove) {
+        log.info("Начало обработки команды: checkOutInternal (частичное), roomNumber={}, guestIdToRemove={}", roomNumber, guestIdToRemove);
 
         try {
-            Room room = roomRepository.findByNumber(roomNumber)
-                    .orElseThrow(() -> new RoomNotFoundException(roomNumber));
+            Optional<Room> roomOpt = roomRepository.findByNumber(roomNumber);
+            if (!roomOpt.isPresent()) {
+                log.error("Ошибка выполнения команды: checkOutInternal - комната {} не найдена", roomNumber);
+                throw new RoomNotFoundException(roomNumber);
+            }
+
+            Room room = roomOpt.get();
 
             if (!room.isOccupied()) {
-                log.error("Ошибка выполнения команды: checkOut - комната {} пуста", roomNumber);
+                log.error("Ошибка выполнения команды: checkOutInternal - комната {} не занята", roomNumber);
                 return false;
             }
 
-            List<Guest> guests = guestRepository.findByRoomId(room.getId());
+            List<Guest> guests = room.getGuests();
 
-            for (Guest guest : guests) {
-                guest.setRoom(null);
-                guest.setRoomId(null);
-                guestRepository.save(guest);
+            if (guestIdToRemove != null) {
+                Guest guestToRemove = guests.stream()
+                        .filter(g -> g.getId() == guestIdToRemove)
+                        .findFirst()
+                        .orElse(null);
+
+                if (guestToRemove == null) {
+                    log.error("Ошибка выполнения команды: checkOutInternal - гость ID {} не найден в комнате {}", guestIdToRemove, roomNumber);
+                    return false;
+                }
+
+                guestToRemove.setRoom(null);
+                guests.remove(guestToRemove);
+
+                if (guests.isEmpty()) {
+                    room.setGuests(new ArrayList<>());
+                    room.setOccupied(false);
+                    room.clearOccupationTime();
+                }
+            } else {
+                for (Guest guest : guests) {
+                    guest.setRoom(null);
+                }
+                room.setGuests(new ArrayList<>());
+                room.setOccupied(false);
+                room.clearOccupationTime();
             }
 
-            room.checkOut();
             roomRepository.save(room);
 
-            String entry = String.format("Выселены все гости %s", LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE));
+            String entry = (guestIdToRemove != null) ?
+                    "Выселен гость ID " + guestIdToRemove + " " + LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE) :
+                    "Выселены все гости " + LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE);
             stayHistoryRepository.addEntry(room.getId(), entry);
 
-            log.info("Успешно выполнена команда: checkOut, roomNumber={}, guestsCount={}", roomNumber, guests.size());
             return true;
         } catch (Exception e) {
-            log.error("Ошибка выполнения команды: checkOut, roomNumber={}", roomNumber, e);
+            log.error("Ошибка выполнения команды: checkOutInternal, roomNumber={}", roomNumber, e);
             throw new RoomException("Ошибка при выселении гостей из комнаты", e);
         }
+    }
+
+    /**
+     * Вспомогательный метода для избегания вложенной транзакции.
+     * @param roomNumber номер комнаты
+     */
+    @Override
+    public boolean checkOutInternal(int roomNumber) {
+        return checkOutInternal(roomNumber, null);
     }
 
     /**
@@ -191,10 +276,28 @@ public class RoomManager implements IRoomManager {
 
         transactionManager.beginTransaction();
         try {
-            roomRepository.findByNumber(roomNumber).ifPresent(room -> {
-                room.setMaintenance(maintenance);
-                roomRepository.save(room);
-            });
+            Optional<Room> roomOpt = roomRepository.findByNumber(roomNumber);
+            if (!roomOpt.isPresent()) {
+                log.error("Ошибка выполнения команды: setRoomMaintenance - комната {} не найдена", roomNumber);
+                throw new RoomNotFoundException(roomNumber);
+            }
+
+            Room room = roomOpt.get();
+
+            if (!roomConfig.isStatusChangeEnabled()) {
+                transactionManager.rollbackTransaction();
+                log.error("Ошибка выполнения команды: setRoomMaintenance - изменение статуса номера отключено в конфигурации для комнаты {}", roomNumber);
+                throw new IllegalStateException("Изменение статуса номера отключено в конфигурации");
+            }
+
+            if (room.isOccupied()) {
+                transactionManager.rollbackTransaction();
+                log.error("Ошибка выполнения команды: setRoomMaintenance - комната {} занята", roomNumber);
+                throw new RoomException("Нельзя установить обслуживание для занятой комнаты");
+            }
+
+            room.setUnderMaintenance(maintenance);
+            roomRepository.save(room);
 
             transactionManager.commitTransaction();
             log.info("Успешно выполнена команда: setRoomMaintenance, roomNumber={}, maintenance={}", roomNumber, maintenance);
@@ -221,10 +324,16 @@ public class RoomManager implements IRoomManager {
 
         transactionManager.beginTransaction();
         try {
-            roomRepository.findByNumber(roomNumber).ifPresent(room -> {
-                room.setPrice(newPrice);
-                roomRepository.save(room);
-            });
+            Optional<Room> roomOpt = roomRepository.findByNumber(roomNumber);
+            if (!roomOpt.isPresent()) {
+                log.error("Ошибка выполнения команды: changeRoomPrice - комната {} не найдена", roomNumber);
+                throw new RoomNotFoundException(roomNumber);
+            }
+
+            Room room = roomOpt.get();
+            room.setPrice(newPrice);
+            roomRepository.save(room);
+
             transactionManager.commitTransaction();
             log.info("Успешно выполнена команда: changeRoomPrice, roomNumber={}, newPrice={}", roomNumber, newPrice);
         } catch (Exception e) {
@@ -242,11 +351,18 @@ public class RoomManager implements IRoomManager {
     @Override
     public List<Room> getSortedRooms(RoomSortOption option) {
         log.info("Начало обработки команды: getSortedRooms, option={}", option);
-        List<Room> rooms = getAllRooms().stream()
-                .sorted(option.getComparator())
-                .collect(Collectors.toList());
-        log.info("Успешно выполнена команда: getSortedRooms, sortedRoomsCount={}", rooms.size());
-        return rooms;
+
+        try {
+            List<Room> rooms = getAllRooms();
+            List<Room> sortedRooms = rooms.stream()
+                    .sorted(option.getComparator())
+                    .collect(Collectors.toList());
+            log.info("Успешно выполнена команда: getSortedRooms, sortedRoomsCount={}", sortedRooms.size());
+            return sortedRooms;
+        } catch (Exception e) {
+            log.error("Ошибка выполнения команды: getSortedRooms, option={}", option, e);
+            throw new RoomException("Ошибка при сортировке комнат", e);
+        }
     }
 
     /**
@@ -257,20 +373,11 @@ public class RoomManager implements IRoomManager {
     public List<Room> getAllRooms() {
         log.info("Начало обработки команды: getAllRooms");
 
-        transactionManager.beginTransaction();
         try {
             List<Room> rooms = roomRepository.findAll();
-            rooms.forEach(room -> {
-                List<Guest> guests = guestRepository.findByRoomId(room.getId());
-                room.setGuests(guests);
-                room.setOccupied(!guests.isEmpty());
-                room.setStayHistory(stayHistoryRepository.findByRoomId(room.getId(), room.getHistorySize()));
-            });
-            transactionManager.commitTransaction();
             log.info("Успешно выполнена команда: getAllRooms, roomsCount={}", rooms.size());
             return rooms;
         } catch (Exception e) {
-            transactionManager.rollbackTransaction();
             log.error("Ошибка выполнения команды: getAllRooms", e);
             throw new RoomException("Ошибка при получении списка комнат", e);
         }
@@ -284,26 +391,16 @@ public class RoomManager implements IRoomManager {
     @Override
     public Optional<Room> findRoomByNumber(int roomNumber) {
         log.info("Начало обработки команды: findRoomByNumber, roomNumber={}", roomNumber);
-        transactionManager.beginTransaction();
-        try {
-            Optional<Room> roomOpt = roomRepository.findByNumber(roomNumber);
-            roomOpt.ifPresent(room -> {
-                List<Guest> guests = guestRepository.findByRoomId(room.getId());
-                room.setGuests(guests);
-                room.setOccupied(!guests.isEmpty());
-                room.setStayHistory(stayHistoryRepository.findByRoomId(room.getId(), room.getHistorySize()));
-            });
-            transactionManager.commitTransaction();
 
-            if (roomOpt.isPresent()) {
+        try {
+            Optional<Room> room = roomRepository.findByNumber(roomNumber);
+            if (room.isPresent()) {
                 log.info("Успешно выполнена команда: findRoomByNumber, roomNumber={}, found=true", roomNumber);
             } else {
                 log.info("Успешно выполнена команда: findRoomByNumber, roomNumber={}, found=false", roomNumber);
             }
-
-            return roomOpt;
+            return room;
         } catch (Exception e) {
-            transactionManager.rollbackTransaction();
             log.error("Ошибка выполнения команды: findRoomByNumber, roomNumber={}", roomNumber, e);
             throw new RoomNotFoundException(roomNumber);
         }
@@ -318,12 +415,18 @@ public class RoomManager implements IRoomManager {
     @Override
     public List<Room> getFreeRooms(RoomSortOption option) {
         log.info("Начало обработки команды: getFreeRooms, option={}", option);
-        List<Room> freeRooms = getAllRooms().stream()
-                .filter(room -> !room.isOccupied() && !room.isUnderMaintenance())
-                .sorted(option.getComparator())
-                .collect(Collectors.toList());
-        log.info("Успешно выполнена команда: getFreeRooms, freeRoomsCount={}", freeRooms.size());
-        return freeRooms;
+
+        try {
+            List<Room> freeRooms = getAllRooms().stream()
+                    .filter(room -> !room.isOccupied() && !room.isUnderMaintenance())
+                    .sorted(option.getComparator())
+                    .collect(Collectors.toList());
+            log.info("Успешно выполнена команда: getFreeRooms, freeRoomsCount={}", freeRooms.size());
+            return freeRooms;
+        } catch (Exception e) {
+            log.error("Ошибка выполнения команды: getFreeRooms, option={}", option, e);
+            throw new RoomException("Ошибка при получении списка свободных комнат", e);
+        }
     }
 
     /**
@@ -334,14 +437,11 @@ public class RoomManager implements IRoomManager {
     public int countFreeRooms() {
         log.info("Начало обработки команды: countFreeRooms");
 
-        transactionManager.beginTransaction();
         try {
             int count = roomRepository.countFree();
-            transactionManager.commitTransaction();
             log.info("Успешно выполнена команда: countFreeRooms, count={}", count);
             return count;
         } catch (Exception e) {
-            transactionManager.rollbackTransaction();
             log.error("Ошибка выполнения команды: countFreeRooms", e);
             throw new RoomException("Ошибка при подсчете свободных комнат", e);
         }
@@ -362,13 +462,18 @@ public class RoomManager implements IRoomManager {
             throw new ValidationException("Дата не может быть пустой");
         }
 
-        List<Room> freeRooms = getAllRooms().stream()
-                .filter(room -> !room.isOccupied() ||
-                        (room.getCheckOutDate() != null && !room.getCheckOutDate().isAfter(date)))
-                .collect(Collectors.toList());
-
-        log.info("Успешно выполнена команда: findRoomsThatWillBeFree, freeRoomsCount={}", freeRooms.size());
-        return freeRooms;
+        try {
+            List<Room> allRooms = getAllRooms();
+            List<Room> freeRooms = allRooms.stream()
+                    .filter(room -> !room.isOccupied() ||
+                            (room.getCheckOutDate() != null && !room.getCheckOutDate().isAfter(date)))
+                    .collect(Collectors.toList());
+            log.info("Успешно выполнена команда: findRoomsThatWillBeFree, freeRoomsCount={}", freeRooms.size());
+            return freeRooms;
+        } catch (Exception e) {
+            log.error("Ошибка выполнения команды: findRoomsThatWillBeFree, date={}", date, e);
+            throw new RoomException("Ошибка при поиске комнат, которые будут свободны к указанной дате", e);
+        }
     }
 
     /**
@@ -384,12 +489,15 @@ public class RoomManager implements IRoomManager {
             log.error("Ошибка выполнения команды: fullRoomPrice - комната пустая");
             throw new ValidationException("Комната не может быть пустой");
         }
+
         if (room.getCheckInDate() == null || room.getCheckOutDate() == null) {
             log.info("Успешно выполнена команда: fullRoomPrice, roomNumber={}, price=0.0 (нет дат заселения)", room.getNumber());
             return 0.0;
         }
-        long days = java.time.temporal.ChronoUnit.DAYS.between(room.getCheckInDate(), room.getCheckOutDate());
+
+        long days = ChronoUnit.DAYS.between(room.getCheckInDate(), room.getCheckOutDate());
         double price = Math.max(1, days) * room.getPrice();
+
         log.info("Успешно выполнена команда: fullRoomPrice, roomNumber={}, price={}", room.getNumber(), price);
         return price;
     }
@@ -403,16 +511,19 @@ public class RoomManager implements IRoomManager {
     public List<String> getRoomHistory(int roomNumber) {
         log.info("Начало обработки команды: getRoomHistory, roomNumber={}", roomNumber);
 
-        transactionManager.beginTransaction();
         try {
-            Room room = roomRepository.findByNumber(roomNumber)
-                    .orElseThrow(() -> new RoomNotFoundException(roomNumber));
-            List<String> history = stayHistoryRepository.findByRoomId(room.getId(), room.getHistorySize());
-            transactionManager.commitTransaction();
+            Optional<Room> roomOpt = roomRepository.findByNumber(roomNumber);
+            if (!roomOpt.isPresent()) {
+                log.error("Ошибка выполнения команды: getRoomHistory - комната {} не найдена", roomNumber);
+                throw new RoomNotFoundException(roomNumber);
+            }
+
+            Room room = roomOpt.get();
+            List<String> history = stayHistoryRepository.findByRoomId(room.getId(), roomConfig.getHistorySize());
+
             log.info("Успешно выполнена команда: getRoomHistory, roomNumber={}, entriesCount={}", roomNumber, history.size());
             return history;
         } catch (Exception e) {
-            transactionManager.rollbackTransaction();
             log.error("Ошибка выполнения команды: getRoomHistory, roomNumber={}", roomNumber, e);
             throw new RoomException("Ошибка при получении истории комнаты", e);
         }
@@ -452,18 +563,6 @@ public class RoomManager implements IRoomManager {
         }
         if (!checkOut.isAfter(checkIn)) {
             throw new ValidationException("Дата выселения должна быть после даты заселения");
-        }
-    }
-
-    /**
-     * Обновляет существующую комнату новыми данными.
-     * @param existing существующая комната
-     * @param newData новые данные для обновления
-     */
-    private void updateExistingRoom(Room existing, Room newData) {
-        existing.setPrice(newData.getPrice());
-        if (!existing.isOccupied()) {
-            existing.setMaintenance(newData.isUnderMaintenance());
         }
     }
 }

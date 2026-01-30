@@ -6,4 +6,5 @@ public interface StayHistoryRepository {
     void addEntry(long roomId, String entry);
     List<String> findByRoomId(long roomId, int limit);
     void deleteByRoomId(long roomId);
+    void deleteOldestEntryForRoom(long roomId);
 }

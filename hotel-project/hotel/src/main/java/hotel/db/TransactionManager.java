@@ -1,81 +1,64 @@
 package hotel.db;
 
 import di.Component;
-import hotel.exceptions.db.TransactionException;
+import di.Inject;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityTransaction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.sql.Connection;
-import java.sql.SQLException;
 
-/**
- * Менеджер транзакций для управления транзакциями базы данных.
- * Обеспечивает начало, подтверждение и откат транзакций.
- * Использует ThreadLocal для хранения состояния транзакции в рамках текущего потока.
- */
 @Component
 public class TransactionManager {
 
-    private static final ThreadLocal<Boolean> inTransaction = new ThreadLocal<>();
-    private final Connection connection;
+    private static final Logger log = LoggerFactory.getLogger(TransactionManager.class);
 
-    /**
-     * Конструктор менеджера транзакций.
-     * Инициализирует соединение с базой данных через ConnectionProvider.
-     */
-    public TransactionManager() {
-        this.connection = ConnectionProvider.getInstance().getConnection();
-    }
+    @Inject
+    private EntityManagerContext entityManagerContext;
 
-    /**
-     * Начинает новую транзакцию.
-     */
     public void beginTransaction() {
-        if (Boolean.TRUE.equals(inTransaction.get())) {
-            throw new TransactionException("Транзакция уже активна");
-        }
-        try {
-            inTransaction.set(true);
-        } catch (Exception e) {
-            throw new TransactionException("Не удалось начать транзакцию", e);
+        EntityManager entityManager = entityManagerContext.getEntityManager();
+        EntityTransaction transaction = entityManager.getTransaction();
+
+        if (!transaction.isActive()) {
+            transaction.begin();
+            log.debug("Транзакция начата");
+        } else {
+            log.debug("Используется существующая транзакция");
         }
     }
 
-    /**
-     * Подтверждает текущую транзакцию.
-     */
     public void commitTransaction() {
-        if (!Boolean.TRUE.equals(inTransaction.get())) {
-            throw new TransactionException("Нет активной транзакции для подтверждения");
-        }
-        try {
-            connection.commit();
-            inTransaction.remove();
-        } catch (SQLException e) {
-            rollbackTransaction();
-            throw new TransactionException("Не удалось подтвердить транзакцию", e);
+        EntityManager entityManager = entityManagerContext.getEntityManager();
+        EntityTransaction transaction = entityManager.getTransaction();
+
+        if (transaction.isActive()) {
+            try {
+                transaction.commit();
+                log.debug("Транзакция успешно завершена");
+            } catch (Exception e) {
+                log.error("Ошибка при коммите транзакции", e);
+                rollbackTransaction();
+                throw new RuntimeException("Ошибка при коммите транзакции", e);
+            } finally {
+                entityManagerContext.clear();
+            }
         }
     }
 
-    /**
-     * Откатывает текущую транзакцию.
-     */
     public void rollbackTransaction() {
-        if (!Boolean.TRUE.equals(inTransaction.get())) {
-            return;
-        }
-        try {
-            connection.rollback();
-        } catch (SQLException e) {
-            throw new TransactionException("Не удалось откатить транзакцию", e);
-        } finally {
-            inTransaction.remove();
-        }
-    }
+        EntityManager entityManager = entityManagerContext.getEntityManager();
+        EntityTransaction transaction = entityManager.getTransaction();
 
-    /**
-     * Возвращает соединение с базой данных для выполнения SQL-запросов.
-     * @return соединение с базой данных
-     */
-    public Connection getConnection() {
-        return connection;
+        if (transaction.isActive()) {
+            try {
+                transaction.rollback();
+                log.warn("Транзакция откатилась");
+            } catch (Exception e) {
+                log.error("Ошибка при откате транзакции", e);
+            } finally {
+                entityManagerContext.clear();
+            }
+        }
     }
 }
