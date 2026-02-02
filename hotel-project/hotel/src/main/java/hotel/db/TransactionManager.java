@@ -6,7 +6,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-
+/**
+ * Менеджер транзакций для управления транзакциями JPA.
+ * Предоставляет методы для начала, коммита и отката транзакций.
+ */
 @Component
 public class TransactionManager {
 
@@ -18,6 +21,9 @@ public class TransactionManager {
         this.entityManagerContext = entityManagerContext;
     }
 
+    /**
+     * Начинает новую транзакцию, если она ещё не активна.
+     */
     public void beginTransaction() {
         EntityManager em = entityManagerContext.getEntityManager();
         EntityTransaction tx = em.getTransaction();
@@ -28,6 +34,10 @@ public class TransactionManager {
         }
     }
 
+    /**
+     * Фиксирует текущую транзакцию.
+     * В случае ошибки выполняет откат и очищает контекст.
+     */
     public void commitTransaction() {
         EntityManager em = entityManagerContext.getEntityManager();
         EntityTransaction tx = em.getTransaction();
@@ -46,6 +56,9 @@ public class TransactionManager {
         }
     }
 
+    /**
+     * Откатывает текущую транзакцию и очищает контекст.
+     */
     public void rollbackTransaction() {
         EntityManager em = entityManagerContext.getEntityManager();
         EntityTransaction tx = em.getTransaction();

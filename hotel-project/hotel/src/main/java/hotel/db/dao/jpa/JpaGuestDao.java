@@ -13,6 +13,10 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * JPA-реализация репозитория для работы с гостями.
+ * Отвечает за сохранение, удаление и поиск гостей в базе данных.
+ */
 @Repository
 public class JpaGuestDao implements GuestRepository {
 
@@ -24,6 +28,11 @@ public class JpaGuestDao implements GuestRepository {
         this.entityManagerContext = entityManagerContext;
     }
 
+    /**
+     * Сохраняет или обновляет гостя в базе данных.
+     * @param guest гость для сохранения
+     * @return сохраненный гость
+     */
     @Override
     public Guest save(Guest guest) {
         try {
@@ -40,6 +49,10 @@ public class JpaGuestDao implements GuestRepository {
         }
     }
 
+    /**
+     * Удаляет гостя из базы данных.
+     * @param guest гость для удаления
+     */
     @Override
     public void delete(Guest guest) {
         try {
@@ -54,6 +67,11 @@ public class JpaGuestDao implements GuestRepository {
         }
     }
 
+    /**
+     * Находит гостя по идентификатору.
+     * @param id идентификатор гостя
+     * @return объект гостя или пустой Optional, если не найден
+     */
     @Override
     public Optional<Guest> findById(long id) {
         try {
@@ -71,6 +89,10 @@ public class JpaGuestDao implements GuestRepository {
         }
     }
 
+    /**
+     * Возвращает список всех гостей.
+     * @return список всех гостей
+     */
     @Override
     public List<Guest> findAll() {
         try {
@@ -84,6 +106,11 @@ public class JpaGuestDao implements GuestRepository {
         }
     }
 
+    /**
+     * Находит гостей по идентификатору комнаты.
+     * @param roomId идентификатор комнаты
+     * @return список гостей, проживающих в указанной комнате
+     */
     @Override
     public List<Guest> findByRoomId(long roomId) {
         try {
@@ -98,6 +125,11 @@ public class JpaGuestDao implements GuestRepository {
         }
     }
 
+    /**
+     * Подсчитывает общее количество гостей.
+     * @return количество гостей
+     * @throws GuestException при ошибке подсчета
+     */
     @Override
     public int count() {
         try {
@@ -111,6 +143,10 @@ public class JpaGuestDao implements GuestRepository {
         }
     }
 
+    /**
+     * Загружает информацию о комнате для гостя.
+     * @param guest гость, для которого нужно загрузить комнату
+     */
     @Override
     public void loadRoomForGuest(Guest guest) {
         if (guest.getRoom() != null) {
@@ -118,6 +154,10 @@ public class JpaGuestDao implements GuestRepository {
         }
     }
 
+    /**
+     * Загружает список услуг для гостя.
+     * @param guest гость, для которого нужно загрузить услуги
+     */
     @Override
     public void loadServicesForGuest(Guest guest) {
         guest.getServices().size();

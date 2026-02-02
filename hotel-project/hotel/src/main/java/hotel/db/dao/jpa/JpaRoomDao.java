@@ -13,6 +13,9 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * DAO-класс для работы с сущностью комнаты через JPA.
+ */
 @Repository
 public class JpaRoomDao implements RoomRepository {
 
@@ -24,6 +27,11 @@ public class JpaRoomDao implements RoomRepository {
         this.entityManagerContext = entityManagerContext;
     }
 
+    /**
+     * Сохраняет или обновляет комнату в базе данных.
+     * @param room комната для сохранения
+     * @return сохраненная комната
+     */
     @Override
     public Room save(Room room) {
         try {
@@ -40,6 +48,10 @@ public class JpaRoomDao implements RoomRepository {
         }
     }
 
+    /**
+     * Удаляет комнату из базы данных.
+     * @param room комната для удаления
+     */
     @Override
     public void delete(Room room) {
         try {
@@ -54,6 +66,10 @@ public class JpaRoomDao implements RoomRepository {
         }
     }
 
+    /**
+     * Возвращает список всех комнат.
+     * @return список всех комнат
+     */
     @Override
     public List<Room> findAll() {
         try {
@@ -67,6 +83,11 @@ public class JpaRoomDao implements RoomRepository {
         }
     }
 
+    /**
+     * Находит комнату по идентификатору.
+     * @param id идентификатор комнаты
+     * @return объект комнаты или пустой Optional, если не найдена
+     */
     @Override
     public Optional<Room> findById(long id) {
         try {
@@ -78,6 +99,11 @@ public class JpaRoomDao implements RoomRepository {
         }
     }
 
+    /**
+     * Находит комнату по номеру.
+     * @param number номер комнаты
+     * @return объект комнаты или пустой Optional, если не найдена
+     */
     @Override
     public Optional<Room> findByNumber(int number) {
         try {
@@ -93,6 +119,10 @@ public class JpaRoomDao implements RoomRepository {
         }
     }
 
+    /**
+     * Подсчитывает количество свободных комнат.
+     * @return количество свободных комнат
+     */
     @Override
     public int countFree() {
         try {

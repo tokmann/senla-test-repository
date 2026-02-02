@@ -38,20 +38,17 @@ public class GuestManager implements IGuestManager {
     private static final Logger log = LoggerFactory.getLogger(GuestManager.class);
 
     private final GuestRepository guestRepository;
-    private final RoomRepository roomRepository;
     private final GuestServiceRepository guestServiceRepository;
     private final IRoomManager roomManager;
     private final IServiceManager serviceManager;
     private final TransactionManager transactionManager;
 
     public GuestManager(GuestRepository guestRepository,
-                        RoomRepository roomRepository,
                         GuestServiceRepository guestServiceRepository,
                         IRoomManager roomManager,
                         IServiceManager serviceManager,
                         TransactionManager transactionManager) {
         this.guestRepository = guestRepository;
-        this.roomRepository = roomRepository;
         this.guestServiceRepository = guestServiceRepository;
         this.roomManager = roomManager;
         this.serviceManager = serviceManager;

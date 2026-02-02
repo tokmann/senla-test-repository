@@ -3,7 +3,10 @@ package hotel.db;
 import jakarta.persistence.EntityManager;
 import org.springframework.stereotype.Component;
 
-
+/**
+ * Контекст для управления экземпляром EntityManager в рамках потока.
+ * Использует ThreadLocal для хранения и повторного использования EntityManager.
+ */
 @Component
 public class EntityManagerContext {
 
@@ -16,6 +19,11 @@ public class EntityManagerContext {
         this.emfProvider = emfProvider;
     }
 
+    /**
+     * Возвращает текущий EntityManager для потока.
+     * Если менеджер не существует или закрыт, создаёт новый экземпляр.
+     * @return экземпляр EntityManager
+     */
     public EntityManager getEntityManager() {
         EntityManager entityManager = entityManagerHolder.get();
 
@@ -27,6 +35,9 @@ public class EntityManagerContext {
         return entityManager;
     }
 
+    /**
+     * Закрывает текущий EntityManager и удаляет его из контекста потока.
+     */
     public void clear() {
         EntityManager entityManager = entityManagerHolder.get();
 

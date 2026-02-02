@@ -14,6 +14,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+/**
+ * DAO-класс для работы с историей проживания через JPA.
+ */
 @Repository
 public class JpaStayHistoryDao implements StayHistoryRepository {
 
@@ -25,6 +28,11 @@ public class JpaStayHistoryDao implements StayHistoryRepository {
         this.entityManagerContext = entityManagerContext;
     }
 
+    /**
+     * Добавляет запись в историю проживания для комнаты.
+     * @param roomId идентификатор комнаты
+     * @param entry текст записи
+     */
     @Override
     public void addEntry(long roomId, String entry) {
         try {
@@ -46,6 +54,12 @@ public class JpaStayHistoryDao implements StayHistoryRepository {
         }
     }
 
+    /**
+     * Получает последние записи истории для комнаты.
+     * @param roomId идентификатор комнаты
+     * @param limit максимальное количество записей
+     * @return список записей истории
+     */
     @Override
     public List<String> findByRoomId(long roomId, int limit) {
         try {
@@ -61,6 +75,10 @@ public class JpaStayHistoryDao implements StayHistoryRepository {
         }
     }
 
+    /**
+     * Удаляет всю историю для указанной комнаты.
+     * @param roomId идентификатор комнаты
+     */
     @Override
     public void deleteByRoomId(long roomId) {
         try {
@@ -74,6 +92,10 @@ public class JpaStayHistoryDao implements StayHistoryRepository {
         }
     }
 
+    /**
+     * Удаляет самую старую запись истории для комнаты.
+     * @param roomId идентификатор комнаты
+     */
     @Override
     public void deleteOldestEntryForRoom(long roomId) {
         try {

@@ -10,6 +10,10 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+/**
+ * Контроллер для управления услугами отеля.
+ * Делегирует бизнес-операции в {@link IServiceManager}.
+ */
 @Component
 public class ServiceController implements IServiceController {
 
@@ -21,12 +25,22 @@ public class ServiceController implements IServiceController {
         this.serviceManager = serviceManager;
     }
 
+    /**
+     * Добавляет новую услугу.
+     * @param service объект услуги
+     * @return добавленная услуга
+     */
     @Override
     public Service addService(Service service) {
         log.info("Начало обработки команды: addService, service={}", service);
         return serviceManager.addService(service);
     }
 
+    /**
+     * Возвращает список услуг с сортировкой.
+     * @param option параметр сортировки
+     * @return список услуг
+     */
     @Override
     public List<Service> getServices(ServiceSortOption option) {
         log.info("Начало обработки команды: getServices, option={}", option);

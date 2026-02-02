@@ -17,6 +17,9 @@ import org.springframework.stereotype.Repository;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * JPA-репозиторий для управления связью гостей и услуг.
+ */
 @Repository
 public class JpaGuestServiceDao implements GuestServiceRepository {
 
@@ -28,6 +31,11 @@ public class JpaGuestServiceDao implements GuestServiceRepository {
         this.entityManagerContext = entityManagerContext;
     }
 
+    /**
+     * Добавляет услугу гостю.
+     * @param guestId идентификатор гостя
+     * @param serviceId идентификатор услуги
+     */
     @Override
     public void addServiceToGuest(long guestId, long serviceId) {
         try {
@@ -58,6 +66,11 @@ public class JpaGuestServiceDao implements GuestServiceRepository {
         }
     }
 
+    /**
+     * Удаляет услугу у гостя.
+     * @param guestId идентификатор гостя
+     * @param serviceId идентификатор услуги
+     */
     @Override
     public void removeServiceFromGuest(long guestId, long serviceId) {
         try {
@@ -85,6 +98,11 @@ public class JpaGuestServiceDao implements GuestServiceRepository {
         }
     }
 
+    /**
+     * Находит все услуги, подключенные гостю.
+     * @param guestId идентификатор гостя
+     * @return список услуг гостя
+     */
     @Override
     public List<Service> findServicesByGuestId(long guestId) {
         try {
@@ -101,6 +119,11 @@ public class JpaGuestServiceDao implements GuestServiceRepository {
         }
     }
 
+    /**
+     * Находит всех гостей, использующих услугу.
+     * @param serviceId идентификатор услуги
+     * @return список гостей, использующих услугу
+     */
     @Override
     public List<Guest> findGuestsByServiceId(long serviceId) {
         try {

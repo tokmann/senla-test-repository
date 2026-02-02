@@ -35,18 +35,15 @@ public class RoomManager implements IRoomManager {
     private static final Logger log = LoggerFactory.getLogger(RoomManager.class);
 
     private final JpaRoomDao roomRepository;
-    private final JpaGuestDao guestRepository;
     private final JpaStayHistoryDao stayHistoryRepository;
     private final TransactionManager transactionManager;
     private final RoomConfigurationService roomConfig;
 
     public RoomManager(JpaRoomDao roomRepository,
-                       JpaGuestDao guestRepository,
                        JpaStayHistoryDao stayHistoryRepository,
                        TransactionManager transactionManager,
                        RoomConfigurationService roomConfig) {
         this.roomRepository = roomRepository;
-        this.guestRepository = guestRepository;
         this.stayHistoryRepository = stayHistoryRepository;
         this.transactionManager = transactionManager;
         this.roomConfig = roomConfig;

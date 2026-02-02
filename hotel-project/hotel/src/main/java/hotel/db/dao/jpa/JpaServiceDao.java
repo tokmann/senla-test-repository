@@ -24,6 +24,11 @@ public class JpaServiceDao implements ServiceRepository {
         this.entityManagerContext = entityManagerContext;
     }
 
+    /**
+     * Сохраняет или обновляет услугу в базе данных.
+     * @param service услуга для сохранения
+     * @return сохраненная услуга
+     */
     @Override
     public Service save(Service service) {
         try {
@@ -40,6 +45,10 @@ public class JpaServiceDao implements ServiceRepository {
         }
     }
 
+    /**
+     * Удаляет услугу из базы данных.
+     * @param service услуга для удаления
+     */
     @Override
     public void delete(Service service) {
         try {
@@ -54,6 +63,10 @@ public class JpaServiceDao implements ServiceRepository {
         }
     }
 
+    /**
+     * Возвращает список всех услуг.
+     * @return список всех услуг
+     */
     @Override
     public List<Service> findAll() {
         try {
@@ -67,6 +80,11 @@ public class JpaServiceDao implements ServiceRepository {
         }
     }
 
+    /**
+     * Находит услугу по идентификатору.
+     * @param id идентификатор услуги
+     * @return объект услуги или пустой Optional, если не найдена
+     */
     @Override
     public Optional<Service> findById(long id) {
         try {
@@ -78,6 +96,11 @@ public class JpaServiceDao implements ServiceRepository {
         }
     }
 
+    /**
+     * Находит услугу по названию.
+     * @param name название услуги
+     * @return объект услуги или пустой Optional, если не найдена
+     */
     @Override
     public Optional<Service> findByName(String name) {
         try {

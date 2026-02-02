@@ -12,6 +12,10 @@ import org.springframework.stereotype.Component;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Провайдер фабрики менеджеров сущностей для JPA.
+ * Создаёт и настраивает EntityManagerFactory при запуске приложения.
+ */
 @Component
 public class EntityManagerFactoryProvider {
 
@@ -41,10 +45,17 @@ public class EntityManagerFactoryProvider {
         log.info("EntityManagerFactory успешно создан");
     }
 
+    /**
+     * Создаёт новый экземпляр EntityManager.
+     * @return EntityManager
+     */
     public EntityManager createEntityManager() {
         return entityManagerFactory.createEntityManager();
     }
 
+    /**
+     * Закрывает фабрику менеджеров сущностей при уничтожении компонента.
+     */
     @PreDestroy
     public void close() {
         if (entityManagerFactory.isOpen()) {
