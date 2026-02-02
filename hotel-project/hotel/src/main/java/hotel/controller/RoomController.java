@@ -1,13 +1,12 @@
 package hotel.controller;
 
-import di.Component;
-import di.Inject;
 import hotel.controller.interfaces.IRoomController;
 import hotel.model.Room;
 import hotel.service.interfaces.IRoomManager;
 import hotel.view.enums.RoomSortOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -18,8 +17,11 @@ public class RoomController implements IRoomController {
 
     private static final Logger log = LoggerFactory.getLogger(RoomController.class);
 
-    @Inject
-    private IRoomManager roomManager;
+    private final IRoomManager roomManager;
+
+    public RoomController(IRoomManager roomManager) {
+        this.roomManager = roomManager;
+    }
 
     @Override
     public List<Room> getAllRooms(RoomSortOption option) {

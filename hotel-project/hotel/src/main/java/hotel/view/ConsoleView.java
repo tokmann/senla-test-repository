@@ -1,6 +1,6 @@
 package hotel.view;
 
-import di.Component;
+import org.springframework.stereotype.Component;
 
 /**
  * Консольное представление системы.

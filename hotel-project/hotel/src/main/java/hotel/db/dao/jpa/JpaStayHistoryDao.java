@@ -1,10 +1,7 @@
 package hotel.db.dao.jpa;
 
-import di.Component;
-import di.Inject;
 import hotel.constants.JpaQueryConstants;
 import hotel.db.EntityManagerContext;
-import hotel.db.TransactionManager;
 import hotel.db.interfaces.StayHistoryRepository;
 import hotel.exceptions.rooms.RoomException;
 import hotel.exceptions.rooms.RoomNotFoundException;
@@ -13,19 +10,19 @@ import hotel.model.StayHistory;
 import jakarta.persistence.EntityManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-@Component
+@Repository
 public class JpaStayHistoryDao implements StayHistoryRepository {
 
     private static final Logger log = LoggerFactory.getLogger(JpaStayHistoryDao.class);
 
-    @Inject
-    private EntityManagerContext entityManagerContext;
+    private final EntityManagerContext entityManagerContext;
 
-    private EntityManager getEntityManager() {
-        return entityManagerContext.getEntityManager();
+    public JpaStayHistoryDao(EntityManagerContext entityManagerContext) {
+        this.entityManagerContext = entityManagerContext;
     }
 
     @Override
@@ -88,5 +85,9 @@ public class JpaStayHistoryDao implements StayHistoryRepository {
             log.error("Ошибка при удалении самой старой записи истории для комнаты ID {}", roomId, e);
             throw new RoomException("Ошибка при удалении самой старой записи истории для комнаты ID " + roomId, e);
         }
+    }
+
+    private EntityManager getEntityManager() {
+        return entityManagerContext.getEntityManager();
     }
 }

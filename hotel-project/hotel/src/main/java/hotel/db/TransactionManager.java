@@ -1,11 +1,10 @@
 package hotel.db;
 
-import di.Component;
-import di.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityTransaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 
 @Component
@@ -13,28 +12,29 @@ public class TransactionManager {
 
     private static final Logger log = LoggerFactory.getLogger(TransactionManager.class);
 
-    @Inject
-    private EntityManagerContext entityManagerContext;
+    private final EntityManagerContext entityManagerContext;
+
+    public TransactionManager(EntityManagerContext entityManagerContext) {
+        this.entityManagerContext = entityManagerContext;
+    }
 
     public void beginTransaction() {
-        EntityManager entityManager = entityManagerContext.getEntityManager();
-        EntityTransaction transaction = entityManager.getTransaction();
+        EntityManager em = entityManagerContext.getEntityManager();
+        EntityTransaction tx = em.getTransaction();
 
-        if (!transaction.isActive()) {
-            transaction.begin();
+        if (!tx.isActive()) {
+            tx.begin();
             log.debug("Транзакция начата");
-        } else {
-            log.debug("Используется существующая транзакция");
         }
     }
 
     public void commitTransaction() {
-        EntityManager entityManager = entityManagerContext.getEntityManager();
-        EntityTransaction transaction = entityManager.getTransaction();
+        EntityManager em = entityManagerContext.getEntityManager();
+        EntityTransaction tx = em.getTransaction();
 
-        if (transaction.isActive()) {
+        if (tx.isActive()) {
             try {
-                transaction.commit();
+                tx.commit();
                 log.debug("Транзакция успешно завершена");
             } catch (Exception e) {
                 log.error("Ошибка при коммите транзакции", e);
@@ -47,12 +47,12 @@ public class TransactionManager {
     }
 
     public void rollbackTransaction() {
-        EntityManager entityManager = entityManagerContext.getEntityManager();
-        EntityTransaction transaction = entityManager.getTransaction();
+        EntityManager em = entityManagerContext.getEntityManager();
+        EntityTransaction tx = em.getTransaction();
 
-        if (transaction.isActive()) {
+        if (tx.isActive()) {
             try {
-                transaction.rollback();
+                tx.rollback();
                 log.warn("Транзакция откатилась");
             } catch (Exception e) {
                 log.error("Ошибка при откате транзакции", e);

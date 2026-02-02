@@ -1,9 +1,7 @@
 package hotel.db.dao.jpa;
 
-import di.Component;
-import di.Inject;
+
 import hotel.db.EntityManagerContext;
-import hotel.db.TransactionManager;
 import hotel.db.interfaces.GuestServiceRepository;
 import hotel.exceptions.guests.GuestNotFoundException;
 import hotel.exceptions.services.ServiceException;
@@ -14,20 +12,20 @@ import jakarta.persistence.EntityManager;
 import org.hibernate.Hibernate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Component
+@Repository
 public class JpaGuestServiceDao implements GuestServiceRepository {
 
     private static final Logger log = LoggerFactory.getLogger(JpaGuestServiceDao.class);
 
-    @Inject
-    private EntityManagerContext entityManagerContext;
+    private final EntityManagerContext entityManagerContext;
 
-    private EntityManager getEntityManager() {
-        return entityManagerContext.getEntityManager();
+    public JpaGuestServiceDao(EntityManagerContext entityManagerContext) {
+        this.entityManagerContext = entityManagerContext;
     }
 
     @Override
@@ -117,5 +115,9 @@ public class JpaGuestServiceDao implements GuestServiceRepository {
             log.error("Ошибка при поиске гостей для услуги ID {}", serviceId, e);
             throw new ServiceException("Ошибка при поиске гостей для услуги ID " + serviceId, e);
         }
+    }
+
+    private EntityManager getEntityManager() {
+        return entityManagerContext.getEntityManager();
     }
 }

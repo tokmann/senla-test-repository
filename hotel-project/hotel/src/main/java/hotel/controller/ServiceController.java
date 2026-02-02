@@ -1,13 +1,12 @@
 package hotel.controller;
 
-import di.Component;
-import di.Inject;
 import hotel.controller.interfaces.IServiceController;
 import hotel.model.Service;
 import hotel.service.interfaces.IServiceManager;
 import hotel.view.enums.ServiceSortOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 
@@ -16,8 +15,11 @@ public class ServiceController implements IServiceController {
 
     private static final Logger log = LoggerFactory.getLogger(ServiceController.class);
 
-    @Inject
-    private IServiceManager serviceManager;
+    private final IServiceManager serviceManager;
+
+    public ServiceController(IServiceManager serviceManager) {
+        this.serviceManager = serviceManager;
+    }
 
     @Override
     public Service addService(Service service) {

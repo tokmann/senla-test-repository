@@ -1,7 +1,5 @@
 package hotel.service;
 
-import di.Component;
-import di.Inject;
 import hotel.db.TransactionManager;
 import hotel.db.dao.jpa.JpaGuestDao;
 import hotel.db.dao.jpa.JpaRoomDao;
@@ -16,6 +14,7 @@ import hotel.util.RoomConfigurationService;
 import hotel.view.enums.RoomSortOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -30,25 +29,28 @@ import java.util.stream.Collectors;
  * Содержит бизнес-логику для добавления, заселения, выселения гостей,
  * управления статусами и историей комнат.
  */
-@Component
+@Service
 public class RoomManager implements IRoomManager {
 
     private static final Logger log = LoggerFactory.getLogger(RoomManager.class);
 
-    @Inject
-    private JpaRoomDao roomRepository;
+    private final JpaRoomDao roomRepository;
+    private final JpaGuestDao guestRepository;
+    private final JpaStayHistoryDao stayHistoryRepository;
+    private final TransactionManager transactionManager;
+    private final RoomConfigurationService roomConfig;
 
-    @Inject
-    private JpaGuestDao guestRepository;
-
-    @Inject
-    private JpaStayHistoryDao stayHistoryRepository;
-
-    @Inject
-    private TransactionManager transactionManager;
-
-    @Inject
-    private  RoomConfigurationService roomConfig;
+    public RoomManager(JpaRoomDao roomRepository,
+                       JpaGuestDao guestRepository,
+                       JpaStayHistoryDao stayHistoryRepository,
+                       TransactionManager transactionManager,
+                       RoomConfigurationService roomConfig) {
+        this.roomRepository = roomRepository;
+        this.guestRepository = guestRepository;
+        this.stayHistoryRepository = stayHistoryRepository;
+        this.transactionManager = transactionManager;
+        this.roomConfig = roomConfig;
+    }
 
     /**
      * Добавляет новую комнату в систему.

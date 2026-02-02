@@ -1,14 +1,13 @@
 package hotel.db;
 
-import di.Component;
-import hotel.util.ConfigurationLoader;
-import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,45 +15,41 @@ import java.util.Map;
 @Component
 public class EntityManagerFactoryProvider {
 
-    private final static Logger log = LoggerFactory.getLogger(EntityManagerFactoryProvider.class);
+    private static final Logger log =
+            LoggerFactory.getLogger(EntityManagerFactoryProvider.class);
 
-    private EntityManagerFactory entityManagerFactory;
-    private boolean initialized = false;
+    private final EntityManagerFactory entityManagerFactory;
 
-    public synchronized void initialize() {
-        if (initialized) return;
+    public EntityManagerFactoryProvider(
+            @Value("${db.url}") String url,
+            @Value("${db.user}") String user,
+            @Value("${db.password}") String password
+    ) {
+        Map<String, String> properties = new HashMap<>();
+        properties.put("jakarta.persistence.jdbc.driver", "org.postgresql.Driver");
+        properties.put("jakarta.persistence.jdbc.url", url);
+        properties.put("jakarta.persistence.jdbc.user", user);
+        properties.put("jakarta.persistence.jdbc.password", password);
+        properties.put("hibernate.hbm2ddl.auto", "update");
+        properties.put("hibernate.show_sql", "true");
+        properties.put("hibernate.format_sql", "true");
+        properties.put("hibernate.connection.pool_size", "5");
 
-        try {
-            Map<String, String> properties = new HashMap<>();
-            properties.put("jakarta.persistence.jdbc.driver", "org.postgresql.Driver");
-            properties.put("jakarta.persistence.jdbc.url", ConfigurationLoader.getProperty("db.url"));
-            properties.put("jakarta.persistence.jdbc.user", ConfigurationLoader.getProperty("db.user"));
-            properties.put("jakarta.persistence.jdbc.password", ConfigurationLoader.getProperty("db.password"));
-            properties.put("hibernate.hbm2ddl.auto", "update");
-            properties.put("hibernate.show_sql", "true");
-            properties.put("hibernate.format_sql", "true");
-            properties.put("hibernate.connection.pool_size", "5");
+        this.entityManagerFactory = Persistence.
+                createEntityManagerFactory("hotel-persistence-unit", properties);
 
-            entityManagerFactory = Persistence.createEntityManagerFactory("hotel-persistence-unit", properties);
-            initialized = true;
-            log.info("Успешно создан Создан EntityManagerFactory");
-        } catch (Exception e) {
-            log.error("Не удалось создать EntityManagerFactory", e);
-            throw new RuntimeException("Не удалось создать EntityManagerFactory", e);
-        }
+        log.info("EntityManagerFactory успешно создан");
     }
 
     public EntityManager createEntityManager() {
-        if (!initialized) {
-            initialize();
-        }
         return entityManagerFactory.createEntityManager();
     }
 
+    @PreDestroy
     public void close() {
-        if (entityManagerFactory != null && entityManagerFactory.isOpen()) {
+        if (entityManagerFactory.isOpen()) {
             entityManagerFactory.close();
-            initialized = false;
+            log.info("EntityManagerFactory закрыт");
         }
     }
 }

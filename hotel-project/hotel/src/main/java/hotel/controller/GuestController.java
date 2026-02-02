@@ -1,7 +1,5 @@
 package hotel.controller;
 
-import di.Component;
-import di.Inject;
 import hotel.controller.interfaces.IGuestController;
 import hotel.model.Guest;
 import hotel.model.Service;
@@ -12,6 +10,7 @@ import hotel.view.enums.GuestSortOption;
 import hotel.view.enums.ServiceSortOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -21,14 +20,11 @@ public class GuestController implements IGuestController {
 
     private static final Logger log = LoggerFactory.getLogger(GuestController.class);
 
-    @Inject
-    private IGuestManager guestManager;
+    private final IGuestManager guestManager;
 
-    @Inject
-    private IRoomManager roomManager;
-
-    @Inject
-    private IServiceManager serviceManager;
+    public GuestController(IGuestManager guestManager) {
+        this.guestManager = guestManager;
+    }
 
     @Override
     public Guest registerGuest(Guest guest) {

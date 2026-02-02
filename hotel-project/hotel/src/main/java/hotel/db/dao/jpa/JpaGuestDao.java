@@ -1,7 +1,5 @@
 package hotel.db.dao.jpa;
 
-import di.Component;
-import di.Inject;
 import hotel.constants.JpaQueryConstants;
 import hotel.db.EntityManagerContext;
 import hotel.db.interfaces.GuestRepository;
@@ -10,20 +8,20 @@ import hotel.model.Guest;
 import jakarta.persistence.EntityManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
-@Component
+@Repository
 public class JpaGuestDao implements GuestRepository {
 
     private static final Logger log = LoggerFactory.getLogger(JpaGuestDao.class);
 
-    @Inject
-    private EntityManagerContext entityManagerContext;
+    private final EntityManagerContext entityManagerContext;
 
-    private EntityManager getEntityManager() {
-        return entityManagerContext.getEntityManager();
+    public JpaGuestDao(EntityManagerContext entityManagerContext) {
+        this.entityManagerContext = entityManagerContext;
     }
 
     @Override
@@ -124,4 +122,9 @@ public class JpaGuestDao implements GuestRepository {
     public void loadServicesForGuest(Guest guest) {
         guest.getServices().size();
     }
+
+    private EntityManager getEntityManager() {
+        return entityManagerContext.getEntityManager();
+    }
+
 }

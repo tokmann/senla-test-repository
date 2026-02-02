@@ -1,33 +1,39 @@
 package hotel.db;
 
-import di.Component;
-import di.Inject;
 import jakarta.persistence.EntityManager;
+import org.springframework.stereotype.Component;
 
 
 @Component
 public class EntityManagerContext {
 
-    private static final ThreadLocal<EntityManager> entityManagerHolder = new ThreadLocal<>();
+    private final ThreadLocal<EntityManager> entityManagerHolder =
+            new ThreadLocal<>();
 
-    @Inject
-    private EntityManagerFactoryProvider entityManagerFactoryProvider;
+    private final EntityManagerFactoryProvider emfProvider;
+
+    public EntityManagerContext(EntityManagerFactoryProvider emfProvider) {
+        this.emfProvider = emfProvider;
+    }
 
     public EntityManager getEntityManager() {
         EntityManager entityManager = entityManagerHolder.get();
+
         if (entityManager == null || !entityManager.isOpen()) {
-            entityManager = entityManagerFactoryProvider.createEntityManager();
+            entityManager = emfProvider.createEntityManager();
             entityManagerHolder.set(entityManager);
         }
+
         return entityManager;
     }
 
     public void clear() {
         EntityManager entityManager = entityManagerHolder.get();
+
         if (entityManager != null && entityManager.isOpen()) {
             entityManager.close();
         }
+
         entityManagerHolder.remove();
     }
-
 }

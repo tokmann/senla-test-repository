@@ -1,7 +1,5 @@
 package hotel.service;
 
-import di.Component;
-import di.Inject;
 import hotel.db.TransactionManager;
 import hotel.exceptions.ValidationException;
 import hotel.exceptions.services.ServiceAlreadyExistsException;
@@ -23,16 +21,19 @@ import java.util.stream.Collectors;
  * Менеджер для управления услугами отеля.
  * Содержит бизнес-логику для добавления, изменения цен и получения списка услуг.
  */
-@Component
+@org.springframework.stereotype.Service
 public class ServiceManager implements IServiceManager {
 
     private static final Logger log = LoggerFactory.getLogger(ServiceManager.class);
 
-    @Inject
-    private ServiceRepository serviceRepository;
+    private final ServiceRepository serviceRepository;
+    private final TransactionManager transactionManager;
 
-    @Inject
-    private TransactionManager transactionManager;
+    public ServiceManager(ServiceRepository serviceRepository,
+                          TransactionManager transactionManager) {
+        this.serviceRepository = serviceRepository;
+        this.transactionManager = transactionManager;
+    }
 
     /**
      * Добавляет новую услугу в систему.

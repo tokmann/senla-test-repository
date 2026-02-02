@@ -1,17 +1,16 @@
 package hotel.util;
 
-import di.Component;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 @Component
 public class RoomConfigurationService {
 
-    private final boolean statusChangeEnabled;
-    private final int historySize;
+    @Value("${room.status.change.enabled:true}")
+    private boolean statusChangeEnabled;
 
-    public RoomConfigurationService() {
-        this.statusChangeEnabled = ConfigurationLoader.getBooleanProperty("room.status.change.enabled", true);
-        this.historySize = ConfigurationLoader.getIntProperty("room.history.size", 10);
-    }
+    @Value("${room.history.size:10}")
+    private int historySize;
 
     public boolean isStatusChangeEnabled() {
         return statusChangeEnabled;
