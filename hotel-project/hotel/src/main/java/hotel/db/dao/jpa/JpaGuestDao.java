@@ -126,5 +126,4 @@ public class JpaGuestDao implements GuestRepository {
     private EntityManager getEntityManager() {
         return entityManagerContext.getEntityManager();
     }
-
 }

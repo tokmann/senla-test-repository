@@ -45,8 +45,8 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <configLocation>checkstyle.xml</configLocation>
-                    <suppressionsLocation>suppressions.xml</suppressionsLocation>
+                    <configLocation>checkstyle/checkstyle.xml</configLocation>
+                    <suppressionsLocation>checkstyle/suppressions.xml</suppressionsLocation>
                     <consoleOutput>true</consoleOutput>
                     <failOnViolation>true</failOnViolation>
                 </configuration>

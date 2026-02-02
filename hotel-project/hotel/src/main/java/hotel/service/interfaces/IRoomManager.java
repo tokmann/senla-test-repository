@@ -24,7 +24,7 @@ public interface IRoomManager {
     List<Room> findRoomsThatWillBeFree(LocalDate date);
     double fullRoomPrice(Room room);
     List<String> getRoomHistory(int roomNumber);
-    public boolean checkOutInternal(int roomNumber);
-    public boolean checkOutInternal(int roomNumber, Long guestIdToRemove);
-    public boolean checkInInternal(int roomNumber, List<Guest> guests, LocalDate checkInDate, LocalDate checkOutDate);
+    boolean checkOutInternal(int roomNumber);
+    boolean checkOutInternal(int roomNumber, Long guestIdToRemove);
+    boolean checkInInternal(int roomNumber, List<Guest> guests, LocalDate checkInDate, LocalDate checkOutDate);
 }

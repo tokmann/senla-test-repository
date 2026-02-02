@@ -422,5 +422,4 @@ public class GuestManager implements IGuestManager {
             throw new ValidationException("Фамилия гостя не может быть пустой");
         }
     }
-
 }

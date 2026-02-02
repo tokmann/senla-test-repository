@@ -4,8 +4,6 @@ import hotel.controller.interfaces.IGuestController;
 import hotel.model.Guest;
 import hotel.model.Service;
 import hotel.service.interfaces.IGuestManager;
-import hotel.service.interfaces.IRoomManager;
-import hotel.service.interfaces.IServiceManager;
 import hotel.view.enums.GuestSortOption;
 import hotel.view.enums.ServiceSortOption;
 import org.slf4j.Logger;
