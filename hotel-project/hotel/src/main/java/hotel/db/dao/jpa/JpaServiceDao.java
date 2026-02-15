@@ -1,32 +1,34 @@
 package hotel.db.dao.jpa;
 
-import di.Component;
-import di.Inject;
 import hotel.constants.JpaQueryConstants;
 import hotel.db.EntityManagerContext;
-import hotel.db.TransactionManager;
 import hotel.db.interfaces.ServiceRepository;
 import hotel.exceptions.services.ServiceException;
 import hotel.model.Service;
 import jakarta.persistence.EntityManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
-@Component
+@Repository
 public class JpaServiceDao implements ServiceRepository {
 
     private static final Logger log = LoggerFactory.getLogger(JpaServiceDao.class);
 
-    @Inject
-    private EntityManagerContext entityManagerContext;
+    private final EntityManagerContext entityManagerContext;
 
-    private EntityManager getEntityManager() {
-        return entityManagerContext.getEntityManager();
+    public JpaServiceDao(EntityManagerContext entityManagerContext) {
+        this.entityManagerContext = entityManagerContext;
     }
 
+    /**
+     * Сохраняет или обновляет услугу в базе данных.
+     * @param service услуга для сохранения
+     * @return сохраненная услуга
+     */
     @Override
     public Service save(Service service) {
         try {
@@ -43,6 +45,10 @@ public class JpaServiceDao implements ServiceRepository {
         }
     }
 
+    /**
+     * Удаляет услугу из базы данных.
+     * @param service услуга для удаления
+     */
     @Override
     public void delete(Service service) {
         try {
@@ -57,6 +63,10 @@ public class JpaServiceDao implements ServiceRepository {
         }
     }
 
+    /**
+     * Возвращает список всех услуг.
+     * @return список всех услуг
+     */
     @Override
     public List<Service> findAll() {
         try {
@@ -70,6 +80,11 @@ public class JpaServiceDao implements ServiceRepository {
         }
     }
 
+    /**
+     * Находит услугу по идентификатору.
+     * @param id идентификатор услуги
+     * @return объект услуги или пустой Optional, если не найдена
+     */
     @Override
     public Optional<Service> findById(long id) {
         try {
@@ -81,6 +96,11 @@ public class JpaServiceDao implements ServiceRepository {
         }
     }
 
+    /**
+     * Находит услугу по названию.
+     * @param name название услуги
+     * @return объект услуги или пустой Optional, если не найдена
+     */
     @Override
     public Optional<Service> findByName(String name) {
         try {
@@ -94,5 +114,9 @@ public class JpaServiceDao implements ServiceRepository {
             log.error("Ошибка при поиске услуги по названию: {}", name, e);
             throw new ServiceException("Ошибка при поиске услуги по названию: " + name, e);
         }
+    }
+
+    private EntityManager getEntityManager() {
+        return entityManagerContext.getEntityManager();
     }
 }

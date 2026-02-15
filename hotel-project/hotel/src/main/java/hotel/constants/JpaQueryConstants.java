@@ -45,5 +45,5 @@ public final class JpaQueryConstants {
     public static final String PARAM_NAME = "name";
     public static final String PARAM_LIMIT = "limit";
 
-    private JpaQueryConstants() {}
+    private JpaQueryConstants() { }
 }

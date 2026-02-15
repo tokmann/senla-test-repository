@@ -1,7 +1,5 @@
 package hotel.ui;
 
-import di.Component;
-import di.Inject;
 import hotel.controller.interfaces.IGuestController;
 import hotel.controller.interfaces.IRoomController;
 import hotel.controller.interfaces.IServiceController;
@@ -16,11 +14,11 @@ import hotel.model.Room;
 import hotel.model.Service;
 import hotel.service.interfaces.IGuestManager;
 import hotel.service.interfaces.IRoomManager;
-import hotel.service.interfaces.IServiceManager;
 import hotel.view.ConsoleView;
 import hotel.view.enums.GuestSortOption;
 import hotel.view.enums.RoomSortOption;
 import hotel.view.enums.ServiceSortOption;
+import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -34,28 +32,27 @@ import java.util.Scanner;
 @Component
 public class ConsoleUI {
 
-    @Inject
-    private ConsoleView consoleView;
+    private final ConsoleView consoleView;
+    private final IGuestController guestController;
+    private final IRoomController roomController;
+    private final IServiceController serviceController;
+    private final IGuestManager guestManager;
+    private final IRoomManager roomManager;
+    private final Scanner in = new Scanner(System.in);
 
-    @Inject
-    private IGuestController guestController;
-
-    @Inject
-    private IRoomController roomController;
-
-    @Inject
-    private IServiceController serviceController;
-
-    @Inject
-    private IGuestManager guestManager;
-
-    @Inject
-    private IRoomManager roomManager;
-
-    @Inject
-    private IServiceManager serviceManager;
-
-    private Scanner in = new Scanner(System.in);
+    public ConsoleUI(ConsoleView consoleView,
+                     IGuestController guestController,
+                     IRoomController roomController,
+                     IServiceController serviceController,
+                     IGuestManager guestManager,
+                     IRoomManager roomManager) {
+        this.consoleView = consoleView;
+        this.guestController = guestController;
+        this.roomController = roomController;
+        this.serviceController = serviceController;
+        this.guestManager = guestManager;
+        this.roomManager = roomManager;
+    }
 
     /**
      * Запускает главный цикл приложения.

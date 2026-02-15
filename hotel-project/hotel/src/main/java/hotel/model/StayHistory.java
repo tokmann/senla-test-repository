@@ -32,7 +32,7 @@ public class StayHistory {
     @Column(name = "entry_date", nullable = false)
     private LocalDateTime entryDate = LocalDateTime.now();
 
-    public StayHistory() {}
+    public StayHistory() { }
 
     public StayHistory(Room room, String entry) {
         this.room = room;

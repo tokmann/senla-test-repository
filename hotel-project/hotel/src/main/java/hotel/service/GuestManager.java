@@ -1,7 +1,5 @@
 package hotel.service;
 
-import di.Component;
-import di.Inject;
 import hotel.db.TransactionManager;
 import hotel.db.interfaces.GuestServiceRepository;
 import hotel.db.interfaces.RoomRepository;
@@ -34,28 +32,28 @@ import java.util.stream.Collectors;
  * Содержит бизнес-логику для регистрации, заселения, выселения гостей
  * и управления их услугами.
  */
-@Component
+@org.springframework.stereotype.Service
 public class GuestManager implements IGuestManager {
 
     private static final Logger log = LoggerFactory.getLogger(GuestManager.class);
 
-    @Inject
-    private GuestRepository guestRepository;
+    private final GuestRepository guestRepository;
+    private final GuestServiceRepository guestServiceRepository;
+    private final IRoomManager roomManager;
+    private final IServiceManager serviceManager;
+    private final TransactionManager transactionManager;
 
-    @Inject
-    private RoomRepository roomRepository;
-
-    @Inject
-    private GuestServiceRepository guestServiceRepository;
-
-    @Inject
-    private IRoomManager roomManager;
-
-    @Inject
-    private IServiceManager serviceManager;
-
-    @Inject
-    private TransactionManager transactionManager;
+    public GuestManager(GuestRepository guestRepository,
+                        GuestServiceRepository guestServiceRepository,
+                        IRoomManager roomManager,
+                        IServiceManager serviceManager,
+                        TransactionManager transactionManager) {
+        this.guestRepository = guestRepository;
+        this.guestServiceRepository = guestServiceRepository;
+        this.roomManager = roomManager;
+        this.serviceManager = serviceManager;
+        this.transactionManager = transactionManager;
+    }
 
     /**
      * Добавляет нового гостя в систему.
@@ -421,5 +419,4 @@ public class GuestManager implements IGuestManager {
             throw new ValidationException("Фамилия гостя не может быть пустой");
         }
     }
-
 }

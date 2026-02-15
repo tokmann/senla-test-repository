@@ -40,7 +40,7 @@ public class Service {
     @ManyToMany(mappedBy = "services")
     private List<Guest> guests = new ArrayList<>();
 
-    public Service() {}
+    public Service() { }
 
     public Service(long id, String name, String description, double price, LocalDate date) {
         this.id = id;

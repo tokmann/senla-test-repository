@@ -1,32 +1,37 @@
 package hotel.db.dao.jpa;
 
-import di.Component;
-import di.Inject;
 import hotel.constants.JpaQueryConstants;
 import hotel.db.EntityManagerContext;
-import hotel.db.TransactionManager;
 import hotel.db.interfaces.RoomRepository;
 import hotel.exceptions.rooms.RoomException;
 import hotel.model.Room;
 import jakarta.persistence.EntityManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
-@Component
+/**
+ * DAO-класс для работы с сущностью комнаты через JPA.
+ */
+@Repository
 public class JpaRoomDao implements RoomRepository {
 
     private static final Logger log = LoggerFactory.getLogger(JpaRoomDao.class);
 
-    @Inject
-    private EntityManagerContext entityManagerContext;
+    private final EntityManagerContext entityManagerContext;
 
-    private EntityManager getEntityManager() {
-        return entityManagerContext.getEntityManager();
+    public JpaRoomDao(EntityManagerContext entityManagerContext) {
+        this.entityManagerContext = entityManagerContext;
     }
 
+    /**
+     * Сохраняет или обновляет комнату в базе данных.
+     * @param room комната для сохранения
+     * @return сохраненная комната
+     */
     @Override
     public Room save(Room room) {
         try {
@@ -43,6 +48,10 @@ public class JpaRoomDao implements RoomRepository {
         }
     }
 
+    /**
+     * Удаляет комнату из базы данных.
+     * @param room комната для удаления
+     */
     @Override
     public void delete(Room room) {
         try {
@@ -57,6 +66,10 @@ public class JpaRoomDao implements RoomRepository {
         }
     }
 
+    /**
+     * Возвращает список всех комнат.
+     * @return список всех комнат
+     */
     @Override
     public List<Room> findAll() {
         try {
@@ -70,6 +83,11 @@ public class JpaRoomDao implements RoomRepository {
         }
     }
 
+    /**
+     * Находит комнату по идентификатору.
+     * @param id идентификатор комнаты
+     * @return объект комнаты или пустой Optional, если не найдена
+     */
     @Override
     public Optional<Room> findById(long id) {
         try {
@@ -81,6 +99,11 @@ public class JpaRoomDao implements RoomRepository {
         }
     }
 
+    /**
+     * Находит комнату по номеру.
+     * @param number номер комнаты
+     * @return объект комнаты или пустой Optional, если не найдена
+     */
     @Override
     public Optional<Room> findByNumber(int number) {
         try {
@@ -96,6 +119,10 @@ public class JpaRoomDao implements RoomRepository {
         }
     }
 
+    /**
+     * Подсчитывает количество свободных комнат.
+     * @return количество свободных комнат
+     */
     @Override
     public int countFree() {
         try {
@@ -107,5 +134,9 @@ public class JpaRoomDao implements RoomRepository {
             log.error("Ошибка при подсчете свободных комнат", e);
             throw new RoomException("Ошибка при подсчете свободных комнат", e);
         }
+    }
+
+    private EntityManager getEntityManager() {
+        return entityManagerContext.getEntityManager();
     }
 }
