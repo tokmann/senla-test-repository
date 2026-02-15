@@ -27,6 +27,7 @@
         <jakarta-annotation.version>3.0.0</jakarta-annotation.version>
         <hibernate-core.version>7.2.0.Final</hibernate-core.version>
         <spring-context.version>7.0.3</spring-context.version>
+        <liquibase.version>4.17.2</liquibase.version>
     </properties>
 
     <build>
