@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.17.xsd">
+
+    <changeSet id="1" author="rodion">
+        <createTable tableName="rooms">
+            <column name="id" type="BIGSERIAL" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="number" type="INTEGER">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="capacity" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="price" type="DOUBLE PRECISION">
+                <constraints nullable="false"/>
+            </column>
+            <column name="stars" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_occupied" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="under_maintenance" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="status_change_enabled" type="BOOLEAN" defaultValueBoolean="true"/>
+            <column name="history_size" type="INTEGER" defaultValueNumeric="5"/>
+            <column name="check_in_date" type="DATE"/>
+            <column name="check_out_date" type="DATE"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="2" author="rodion">
+        <createTable tableName="guests">
+            <column name="id" type="BIGSERIAL" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="age" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="first_name" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="second_name" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="room_id" type="BIGINT">
+                <constraints foreignKeyName="fk_guests_rooms"
+                             referencedTableName="rooms"
+                             referencedColumnNames="id"
+                             deleteCascade="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="3" author="rodion">
+        <createTable tableName="services">
+            <column name="id" type="BIGSERIAL" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(100)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="description" type="VARCHAR(500)"/>
+            <column name="price" type="DOUBLE PRECISION">
+                <constraints nullable="false"/>
+            </column>
+            <column name="date" type="DATE"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="4" author="rodion">
+        <createTable tableName="guest_services">
+            <column name="guest_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="service_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey tableName="guest_services"
+                       columnNames="guest_id, service_id"
+                       constraintName="pk_guest_services"/>
+
+        <addForeignKeyConstraint baseTableName="guest_services"
+                                 baseColumnNames="guest_id"
+                                 constraintName="fk_guest_services_guests"
+                                 referencedTableName="guests"
+                                 referencedColumnNames="id"
+                                 onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint baseTableName="guest_services"
+                                 baseColumnNames="service_id"
+                                 constraintName="fk_guest_services_services"
+                                 referencedTableName="services"
+                                 referencedColumnNames="id"
+                                 onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="5" author="rodion">
+        <createTable tableName="stay_history">
+            <column name="id" type="BIGSERIAL" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="room_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="history_entry" type="VARCHAR(500)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="entry_date" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="stay_history"
+                                 baseColumnNames="room_id"
+                                 constraintName="fk_stay_history_rooms"
+                                 referencedTableName="rooms"
+                                 referencedColumnNames="id"
+                                 onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="6" author="rodion">
+        <createIndex tableName="guests" indexName="idx_guests_room_id">
+            <column name="room_id"/>
+        </createIndex>
+
+        <createIndex tableName="stay_history" indexName="idx_stay_history_room_id">
+            <column name="room_id"/>
+        </createIndex>
+
+        <createIndex tableName="guest_services" indexName="idx_guest_services_guest_id">
+            <column name="guest_id"/>
+        </createIndex>
+
+        <createIndex tableName="guest_services" indexName="idx_guest_services_service_id">
+            <column name="service_id"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

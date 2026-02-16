@@ -10,8 +10,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class EntityManagerContext {
 
-    private final ThreadLocal<EntityManager> entityManagerHolder =
-            new ThreadLocal<>();
+    private final ThreadLocal<EntityManager> entityManagerHolder = new ThreadLocal<>();
 
     private final EntityManagerFactoryProvider emfProvider;
 

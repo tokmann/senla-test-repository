@@ -7,6 +7,7 @@ import jakarta.persistence.Persistence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
@@ -17,10 +18,10 @@ import java.util.Map;
  * Создаёт и настраивает EntityManagerFactory при запуске приложения.
  */
 @Component
+@DependsOn("liquibaseRunner")
 public class EntityManagerFactoryProvider {
 
-    private static final Logger log =
-            LoggerFactory.getLogger(EntityManagerFactoryProvider.class);
+    private static final Logger log = LoggerFactory.getLogger(EntityManagerFactoryProvider.class);
 
     private final EntityManagerFactory entityManagerFactory;
 
@@ -34,7 +35,7 @@ public class EntityManagerFactoryProvider {
         properties.put("jakarta.persistence.jdbc.url", url);
         properties.put("jakarta.persistence.jdbc.user", user);
         properties.put("jakarta.persistence.jdbc.password", password);
-        properties.put("hibernate.hbm2ddl.auto", "update");
+        properties.put("hibernate.hbm2ddl.auto", "validate");
         properties.put("hibernate.show_sql", "true");
         properties.put("hibernate.format_sql", "true");
         properties.put("hibernate.connection.pool_size", "5");
