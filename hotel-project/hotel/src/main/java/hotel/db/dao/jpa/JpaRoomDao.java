@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
 
 /**
  * DAO-класс для работы с сущностью комнаты через JPA.
@@ -89,10 +88,9 @@ public class JpaRoomDao implements RoomRepository {
      * @return объект комнаты или пустой Optional, если не найдена
      */
     @Override
-    public Optional<Room> findById(long id) {
+    public Room findById(long id) {
         try {
-            Room room = getEntityManager().find(Room.class, id);
-            return Optional.ofNullable(room);
+            return getEntityManager().find(Room.class, id);
         } catch (Exception e) {
             log.error("Ошибка при поиске комнаты по ID: {}", id, e);
             throw new RoomException("Ошибка при поиске комнаты по ID: " + id, e);
@@ -105,14 +103,14 @@ public class JpaRoomDao implements RoomRepository {
      * @return объект комнаты или пустой Optional, если не найдена
      */
     @Override
-    public Optional<Room> findByNumber(int number) {
+    public Room findByNumber(int number) {
         try {
             List<Room> rooms = getEntityManager().createQuery(
                             JpaQueryConstants.SELECT_ROOM_BY_NUMBER,
                             Room.class
                     ).setParameter(JpaQueryConstants.PARAM_NUMBER, number)
                     .getResultList();
-            return rooms.isEmpty() ? Optional.empty() : Optional.of(rooms.get(0));
+            return (rooms == null || rooms.isEmpty()) ? null : rooms.getFirst();
         } catch (Exception e) {
             log.error("Ошибка при поиске комнаты по номеру: {}", number, e);
             throw new RoomException("Ошибка при поиске комнаты по номеру: " + number, e);

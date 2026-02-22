@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public class JpaServiceDao implements ServiceRepository {
@@ -86,10 +85,9 @@ public class JpaServiceDao implements ServiceRepository {
      * @return объект услуги или пустой Optional, если не найдена
      */
     @Override
-    public Optional<Service> findById(long id) {
+    public Service findById(long id) {
         try {
-            Service service = getEntityManager().find(Service.class, id);
-            return Optional.ofNullable(service);
+            return getEntityManager().find(Service.class, id);
         } catch (Exception e) {
             log.error("Ошибка при поиске услуги по ID: {}", id, e);
             throw new ServiceException("Ошибка при поиске услуги по ID: " + id, e);
@@ -102,14 +100,14 @@ public class JpaServiceDao implements ServiceRepository {
      * @return объект услуги или пустой Optional, если не найдена
      */
     @Override
-    public Optional<Service> findByName(String name) {
+    public Service findByName(String name) {
         try {
             List<Service> services = getEntityManager().createQuery(
                             JpaQueryConstants.SELECT_SERVICE_BY_NAME,
                             Service.class
                     ).setParameter(JpaQueryConstants.PARAM_NAME, name)
                     .getResultList();
-            return services.isEmpty() ? Optional.empty() : Optional.of(services.get(0));
+            return (services == null || services.isEmpty()) ? null : services.getFirst();
         } catch (Exception e) {
             log.error("Ошибка при поиске услуги по названию: {}", name, e);
             throw new ServiceException("Ошибка при поиске услуги по названию: " + name, e);

@@ -33,8 +33,10 @@ public class LiquibaseRunner {
     private String dbPassword;
 
     @PostConstruct
-    public void runMigrations() {
+    public void runMigrations() throws ClassNotFoundException {
         log.info("Запуск Liquibase миграций...");
+
+        Class.forName("org.postgresql.Driver");
 
         try (Connection connection = DriverManager.getConnection(dbUrl, dbUser, dbPassword)) {
             Database database = DatabaseFactory.getInstance()
@@ -48,7 +50,6 @@ public class LiquibaseRunner {
 
             liquibase.update(new Contexts(), new LabelExpression());
             log.info("Liquibase миграции успешно применены");
-
         } catch (SQLException | LiquibaseException e) {
             log.error("Ошибка выполнения миграций Liquibase", e);
             throw new RuntimeException("Не удалось применить миграции БД", e);

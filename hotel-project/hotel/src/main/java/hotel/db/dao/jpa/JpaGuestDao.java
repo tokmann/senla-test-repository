@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
 
 /**
  * JPA-реализация репозитория для работы с гостями.
@@ -73,7 +72,7 @@ public class JpaGuestDao implements GuestRepository {
      * @return объект гостя или пустой Optional, если не найден
      */
     @Override
-    public Optional<Guest> findById(long id) {
+    public Guest findById(long id) {
         try {
             Guest guest = getEntityManager().find(Guest.class, id);
             if (guest != null) {
@@ -82,7 +81,7 @@ public class JpaGuestDao implements GuestRepository {
                     guest.getRoom().getId();
                 }
             }
-            return Optional.ofNullable(guest);
+            return guest;
         } catch (Exception e) {
             log.error("Ошибка при поиске гостя по ID: {}", id, e);
             throw new GuestException("Ошибка при поиске гостя по ID: " + id, e);

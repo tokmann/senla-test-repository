@@ -1,45 +1,37 @@
 package hotel;
 
 import hotel.db.EntityManagerFactoryProvider;
-import hotel.ui.ConsoleUI;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
+import org.springframework.orm.jpa.JpaTransactionManager;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
 
 /**
  * Главный класс консольного приложения отеля.
- * Сканирует и инициализирует все компоненты системы и запускает пользовательский интерфейс.
+ * Сканирует и инициализирует все компоненты системы.
  */
+@EnableTransactionManagement
+@EnableWebMvc
 @Configuration
 @ComponentScan
 @PropertySource("classpath:application.properties")
-public class App {
+public class App implements WebMvcConfigurer {
 
     @Bean
     public static PropertySourcesPlaceholderConfigurer propertyConfigurer() {
         return new PropertySourcesPlaceholderConfigurer();
     }
 
-    /**
-     * Точка входа в приложение.
-     */
-    public static void main(String[] args) {
-
-        AnnotationConfigApplicationContext context =
-                new AnnotationConfigApplicationContext(App.class);
-
-        ConsoleUI ui = context.getBean(ConsoleUI.class);
-        ui.run();
-
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            EntityManagerFactoryProvider emf =
-                    context.getBean(EntityManagerFactoryProvider.class);
-            emf.close();
-            context.close();
-        }));
+    @Bean
+    public PlatformTransactionManager transactionManager(EntityManagerFactoryProvider emfProvider) {
+        return new JpaTransactionManager(emfProvider.getEntityManagerFactory());
     }
 }
 
