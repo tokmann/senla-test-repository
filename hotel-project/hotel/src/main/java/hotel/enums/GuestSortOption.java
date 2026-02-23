@@ -1,4 +1,4 @@
-package hotel.view.enums;
+package hotel.enums;
 
 import hotel.model.Guest;
 import hotel.service.GuestManager;

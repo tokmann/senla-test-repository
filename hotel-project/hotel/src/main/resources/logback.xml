@@ -15,14 +15,14 @@
         </encoder>
     </appender>
 
-    <logger name="org.hibernate.SQL" level="warn" />
-    <logger name="org.hibernate.type.descriptor.sql" level="warn" />
-    <logger name="org.hibernate.orm.jdbc.bind" level="warn" />
+    <logger name="hotel" level="DEBUG"/>
 
-    <logger name="org.hibernate.tool.schema" level="warn" />
+    <logger name="org.hibernate.SQL" level="DEBUG" />
+    <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="TRACE"/>
+    <logger name="org.hibernate.tool.schema" level="WARN" />
 
-    <root level="info">
-        <appender-ref ref="STDOUT"/>
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
         <appender-ref ref="FILE"/>
     </root>
 

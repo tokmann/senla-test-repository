@@ -4,9 +4,15 @@
              version="3.0">
     <persistence-unit name="hotel-persistence-unit" transaction-type="RESOURCE_LOCAL">
         <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+
         <class>hotel.model.Guest</class>
         <class>hotel.model.Room</class>
         <class>hotel.model.Service</class>
         <class>hotel.model.StayHistory</class>
+
+        <properties>
+            <property name="hibernate.show_sql" value="true"/>
+            <property name="hibernate.format_sql" value="true"/>
+        </properties>
     </persistence-unit>
 </persistence>
