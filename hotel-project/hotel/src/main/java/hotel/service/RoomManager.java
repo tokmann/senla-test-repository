@@ -1,6 +1,5 @@
 package hotel.service;
 
-import hotel.db.dao.jpa.JpaGuestDao;
 import hotel.db.dao.jpa.JpaRoomDao;
 import hotel.db.dao.jpa.JpaStayHistoryDao;
 import hotel.exceptions.ValidationException;
